@@ -21,7 +21,7 @@ The interface adheres to an expansive 540x600 layout engineered for high readabi
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────────┐
-│ [Mark] Session-Swap  v1.2.0    [ (●) chatgpt.com ]        [ Backup/Sync ] [ Theme ]   │
+│ [Mark] Session-Swap            [ (●) chatgpt.com ]        [ Backup/Sync ] [ Theme ]   │
 ├───────────────────────────────────────────────────────────────────────────────────────┤
 │ [ + Save Current Session ]               [ Clean Guest Session ]                      │
 ├───────────────────────────────────────────────────────────────────────────────────────┤
@@ -38,7 +38,7 @@ The interface adheres to an expansive 540x600 layout engineered for high readabi
 │  └────┘                                                                               │
 │                                                                                       │
 ├───────────────────────────────────────────────────────────────────────────────────────┤
-│ 2 sessions stored on chatgpt.com                          Session-Swap © 2026 Somaylab│
+│ (●) 2 sessions stored on chatgpt.com                  v1.2.0 · Session-Swap © Somaylab│
 └───────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
