@@ -21,13 +21,13 @@ The interface adheres to an ultra-wide 780x600 widescreen developer dashboard la
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [■] SESSION-SWAP [UTILITY]  [(●) WWW.YOUTUBE.COM]         [ 4 PROFILES ]   [⇄]   [☼]   │
+│ [⇄] SESSION-SWAP            [(●) WWW.YOUTUBE.COM]         [ 4 PROFILES ]   [⇄]   [☼]   │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ [ > SEARCH_KEYWORD...                     [/] ]  [↻]  [+ SAVE]  [EXPORT] [IMPORT] [CLR]│
+│ [ > SEARCH_KEYWORD...                     [/] ]    [↻]     [+ SAVE]   [EXPORT] [IMPORT]│
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │ [All 4]  [Staging 1]  [QA 1]  [Dev 1]  [Work 1]                                        │
 ├──────┬────────────────────┬──────────┬──────────────┬──────────┬─────────┬─────────────┤
-│STATUS│ PROFILE NAME       │ TAG      │ DOMAIN       │ PAYLOAD  │ SYNCED  │ ACTIONS     │
+│STATE │ PROFILE NAME       │ TAG      │ DOMAIN       │ PAYLOAD  │ SYNCED  │ ACTIONS     │
 ├──────┼────────────────────┼──────────┼──────────────┼──────────┼─────────┼─────────────┤
 │ (●)  │ Staging Admin[ACT] │ #staging │ .youtube.com │ 14C  8S  │ 4m ago  │ [↻][❐][✎][x]│
 │ ( )  │ QA Customer Test   │ #testing │ .youtube.com │ 12C  4S  │ 2h ago  │[SWITCH↵][❐] │
