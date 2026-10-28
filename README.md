@@ -17,35 +17,25 @@ session-swap provides client-side state containerization directly within the bro
 
 ### User Interface Wireframe
 
-The interface adheres to a tactical 400x600 layout engineered with 0-blur mechanical hard shadows, tactile button travel, and high-contrast developer typography:
+The interface adheres to an ultra-wide 780x600 widescreen developer dashboard layout engineered with 0-blur mechanical hard shadows, tabular data density, and high-contrast typography:
 
 ```
-┌────────────────────────────────────────────────────────┐
-│ [■] Session-Swap  [v2.0]     [(●) chatgpt.com] [⇄] [☼] │
-├────────────────────────────────────────────────────────┤
-│ [ + Save Session  Ctrl+S ]        [ Clean Guest ]      │
-├────────────────────────────────────────────────────────┤
-│ [ Q Filter profiles...                            [/] ]│
-│ [All 2]  [Staging]  [QA]  [Dev]                        │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │ (●) Staging Admin  [ACTIVE]                      │  │
-│  │     14 cookies • 8 storage keys    [↻] [❐] [✎] [x]│  │
-│  │ ──────────────────────────────────────────────── │  │
-│  │ #staging  Updated 4m ago               ID: stg-01│  │
-│  └──────────────────────────────────────────────────┘  │
-│                                                        │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │ ( ) QA Customer Test                             │  │
-│  │     12 cookies • 4 storage keys   [Switch ↵] [✎] │  │
-│  │ ──────────────────────────────────────────────── │  │
-│  │ #testing  Synced 2h ago                ID: qa-99 │  │
-│  └──────────────────────────────────────────────────┘  │
-│                                                        │
-├────────────────────────────────────────────────────────┤
-│ (●) 2 profiles saved on this domain   v2.0 · Somaylab[↑]│
-└────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ [■] SESSION-SWAP [UTILITY]  [(●) WWW.YOUTUBE.COM]         [ 4 PROFILES ]   [⇄]   [☼]   │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ [ > SEARCH_KEYWORD...                     [/] ]  [↻]  [+ SAVE]  [EXPORT] [IMPORT] [CLR]│
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ [All 4]  [Staging 1]  [QA 1]  [Dev 1]  [Work 1]                                        │
+├──────┬────────────────────┬──────────┬──────────────┬──────────┬─────────┬─────────────┤
+│STATUS│ PROFILE NAME       │ TAG      │ DOMAIN       │ PAYLOAD  │ SYNCED  │ ACTIONS     │
+├──────┼────────────────────┼──────────┼──────────────┼──────────┼─────────┼─────────────┤
+│ (●)  │ Staging Admin[ACT] │ #staging │ .youtube.com │ 14C  8S  │ 4m ago  │ [↻][❐][✎][x]│
+│ ( )  │ QA Customer Test   │ #testing │ .youtube.com │ 12C  4S  │ 2h ago  │[SWITCH↵][❐] │
+│ ( )  │ Dev Superuser      │ #dev     │ .youtube.com │ 19C  14S │ 1d ago  │[SWITCH↵][❐] │
+│ ( )  │ Prod Guest Check   │ #guest   │ .youtube.com │  3C  0S  │ 3d ago  │[SWITCH↵][❐] │
+├──────┴────────────────────┴──────────┴──────────────┴──────────┴─────────┴─────────────┤
+│ (●) 4 PROFILES ACTIVE     Ctrl+S: Snapshot · /: Filter · Esc: Close     v2.0 · Somaylab│
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -62,7 +52,7 @@ The extension is partitioned into three decoupled layers: the Presentation Layer
 │                                                                                 │
 │  ┌─────────────────────────────┐               ┌─────────────────────────────┐  │
 │  │     ACTIVE BROWSER TAB      │               │    POPUP INTERFACE (UI)     │  │
-│  │      (e.g., claude.ai)      │               │     DevPop Brutal 400x600   │  │
+│  │      (e.g., claude.ai)      │               │     Ultra-Wide 780x600      │  │
 │  └──────────────┬──────────────┘               └──────────────┬──────────────┘  │
 │                 │                                             │                 │
 │                 │ DOM Script Injection                        │ Type-Safe IPC   │

@@ -40,7 +40,7 @@ export class PopupController {
 
   private activeTagFilter = "ALL";
   private searchQuery = "";
-  private currentTheme: "light" | "dark" = "light";
+  private currentTheme: "light" | "dark" = "dark";
 
   async init(): Promise<void> {
     try {
@@ -55,7 +55,7 @@ export class PopupController {
   private async initTheme(): Promise<void> {
     const raw = await chrome.storage.local.get(["ss_theme"]);
     if (raw.ss_theme) {
-      this.currentTheme = raw.ss_theme === "dark" ? "dark" : "light";
+      this.currentTheme = raw.ss_theme === "light" ? "light" : "dark";
     } else {
       const isSystemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       this.currentTheme = isSystemDark ? "dark" : "light";
@@ -102,7 +102,7 @@ export class PopupController {
   private async refreshState(): Promise<void> {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tabs || tabs.length === 0 || !tabs[0].url) {
-      this.renderUnsupportedHost("No active tab found");
+      this.renderUnsupportedHost("NO ACTIVE TAB");
       return;
     }
 
@@ -112,16 +112,16 @@ export class PopupController {
     this.state.currentDomain = domain;
 
     const domainEl = document.getElementById("activeDomainDisplay");
-    if (domainEl) domainEl.textContent = domain || "Unsupported page";
+    if (domainEl) domainEl.textContent = domain ? domain.toUpperCase() : "UNSUPPORTED PAGE";
 
     const scopeDomainEl = document.getElementById("exportScopeDomain");
-    if (scopeDomainEl) scopeDomainEl.textContent = domain || "Active domain";
+    if (scopeDomainEl) scopeDomainEl.textContent = domain || "active domain";
 
     const saveScopeEl = document.getElementById("saveScopeDisplay");
-    if (saveScopeEl) saveScopeEl.textContent = domain || "Active domain";
+    if (saveScopeEl) saveScopeEl.textContent = domain || "active domain";
 
     if (!domain) {
-      this.renderUnsupportedHost("This page cannot be managed (internal or local page).");
+      this.renderUnsupportedHost("THIS PAGE CANNOT BE MANAGED (SYSTEM OR LOCAL PAGE).");
       return;
     }
 
@@ -167,7 +167,7 @@ export class PopupController {
               <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
             </svg>
           </div>
-          <h3 class="empty-title">Cannot Manage This Page</h3>
+          <h3 class="empty-title">CANNOT MANAGE THIS PAGE</h3>
           <p class="empty-subtitle">${this.escapeHtml(reason)} Chrome system URLs and local files do not support cookie/storage isolation.</p>
         </div>
       `;
@@ -233,12 +233,17 @@ export class PopupController {
   private renderProfileList(): void {
     const container = document.getElementById("profileListContainer");
     const countEl = document.getElementById("profileCountText");
+    const entriesCountEl = document.getElementById("entriesCountText");
     if (!container) return;
 
     const filtered = this.getFilteredSessions();
+    const count = this.state.sessions.length;
+
     if (countEl) {
-      const count = this.state.sessions.length;
-      countEl.textContent = `${count} ${count === 1 ? "profile" : "profiles"} saved on this domain`;
+      countEl.textContent = `${count} ${count === 1 ? "PROFILE ACTIVE" : "PROFILES ACTIVE"}`;
+    }
+    if (entriesCountEl) {
+      entriesCountEl.textContent = `${count} ${count === 1 ? "PROFILE" : "PROFILES"}`;
     }
 
     if (filtered.length === 0) {
@@ -251,15 +256,15 @@ export class PopupController {
                 <path d="m21 21-4.3-4.3"></path>
               </svg>
             </div>
-            <h3 class="empty-title">No matching profiles</h3>
+            <h3 class="empty-title">NO MATCHING PROFILES</h3>
             <p class="empty-subtitle">No sessions match "${this.escapeHtml(this.searchQuery || this.activeTagFilter)}".</p>
-            <button id="resetSearchBtn" class="btn-primary-save nb-btn" style="width: auto; padding: 6px 14px;">Clear Filter</button>
+            <button id="resetSearchBtn" class="tb-btn tb-btn-save nb-btn" style="width: auto; padding: 6px 14px;">CLEAR FILTER</button>
           </div>
         `;
         document.getElementById("resetSearchBtn")?.addEventListener("click", () => {
           this.searchQuery = "";
           this.activeTagFilter = "ALL";
-          const input = document.getElementById("searchInput") as HTMLInputElement;
+          const input = document.getElementById("searchInput") as HTMLInputElement | null;
           if (input) input.value = "";
           const clearBtn = document.getElementById("clearSearchBtn");
           if (clearBtn) clearBtn.style.display = "none";
@@ -279,10 +284,10 @@ export class PopupController {
                 <line x1="3" y1="10" x2="21" y2="10"></line>
               </svg>
             </div>
-            <h3 class="empty-title">No saved sessions yet</h3>
+            <h3 class="empty-title">NO SAVED SESSIONS YET</h3>
             <p class="empty-subtitle">Save your current login session to switch between multiple accounts easily.</p>
-            <button id="emptySaveBtn" class="btn-primary-save nb-btn" style="width: auto; padding: 6px 16px;">
-              + Save Session
+            <button id="emptySaveBtn" class="tb-btn tb-btn-save nb-btn" style="width: auto; padding: 6px 16px;">
+              + SAVE SESSION
             </button>
           </div>
         `;
@@ -302,7 +307,7 @@ export class PopupController {
 
   private createProfileCard(session: SessionProfile): HTMLElement {
     const card = document.createElement("div");
-    card.className = "session-card";
+    card.className = "session-row-card";
     card.dataset.id = session.id;
 
     const isActive = session.id === this.state.activeSessionId;
@@ -316,71 +321,72 @@ export class PopupController {
     const storageCount = localCount + sessionCount;
     const timeText = formatRelativeTime(session.lastUsed);
     const tagStyle = session.tag ? getTagColor(session.tag) : null;
-    const shortId = session.id.slice(0, 8);
+    const domainText = session.domain || this.state.currentDomain || "";
 
     card.innerHTML = `
-      <div class="card-top-row">
-        <div class="card-title-group">
-          <div class="card-indicator-dot"></div>
-          <div class="card-main-info">
-            <div class="card-heading-wrap">
-              <span class="card-name" title="${this.escapeHtml(session.name)}">${this.escapeHtml(session.name)}</span>
-              ${isActive ? `<span class="card-active-pill">ACTIVE</span>` : ""}
-            </div>
-            <p class="card-stats-text">
-              <span>${cookieCount} cookies</span>
-              <span>•</span>
-              <span>${storageCount} storage keys</span>
-            </p>
-          </div>
-        </div>
-
-        <div class="card-actions-cluster">
-          ${
-            isActive
-              ? `<button class="card-btn-action resync-action nb-btn-sm" title="Re-sync Snapshot">
-                   <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                     <path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"></path>
-                   </svg>
-                 </button>`
-              : `<button class="switch-cta-btn switch-action nb-btn" title="Switch to this profile and reload tab">
-                   <span>Switch</span>
-                   <span>↵</span>
-                 </button>`
-          }
-
-          <button class="card-btn-action copy-session-action nb-btn-sm" title="Copy Single Session JSON">
-            <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="1" ry="1"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </button>
-
-          <button class="card-btn-action edit-action nb-btn-sm" title="Edit name & tag">
-            <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-            </svg>
-          </button>
-
-          <button class="card-btn-action delete-action nb-btn-sm" title="Delete session">
-            <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
-          </button>
-        </div>
+      <div class="col-status">
+        <span class="row-dot"></span>
       </div>
 
-      <div class="card-bottom-row">
-        <div class="card-meta-left">
-          ${
-            session.tag && tagStyle
-              ? `<span class="card-tag-pill" style="background:${tagStyle.bg}; color:${tagStyle.text};">#${this.escapeHtml(session.tag)}</span>`
-              : ""
-          }
-          <span class="card-time-text">${isActive ? "Updated" : "Synced"} ${timeText}</span>
-        </div>
-        <span class="card-id-text">ID: ${shortId}</span>
+      <div class="col-name" title="${this.escapeHtml(session.name)}">
+        <span>${this.escapeHtml(session.name)}</span>
+        ${isActive ? `<span class="row-badge-active">ACTIVE</span>` : ""}
+      </div>
+
+      <div class="col-tag">
+        ${
+          session.tag && tagStyle
+            ? `<span class="tag-badge" style="background:${tagStyle.bg}; color:${tagStyle.text};">#${this.escapeHtml(session.tag)}</span>`
+            : `<span style="opacity:0.35;">—</span>`
+        }
+      </div>
+
+      <div class="col-domain" title="${this.escapeHtml(domainText)}">
+        <span>.${this.escapeHtml(domainText.replace(/^www\./i, ""))}</span>
+      </div>
+
+      <div class="col-payload">
+        <span class="payload-chip">${cookieCount}C</span>
+        <span class="payload-chip">${storageCount}S</span>
+      </div>
+
+      <div class="col-synced">
+        <span>${timeText}</span>
+      </div>
+
+      <div class="col-actions">
+        ${
+          isActive
+            ? `<button class="row-icon-action resync-action nb-btn-sm" title="Re-sync Current Tab State into Snapshot">
+                 <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                   <path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"></path>
+                 </svg>
+               </button>`
+            : `<button class="row-btn-switch switch-action nb-btn" title="Switch to this profile and reload tab">
+                 <span>SWITCH</span>
+                 <span>↵</span>
+               </button>`
+        }
+
+        <button class="row-icon-action copy-session-action nb-btn-sm" title="Copy Single Session JSON">
+          <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="1" ry="1"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
+
+        <button class="row-icon-action edit-action nb-btn-sm" title="Edit name & tag">
+          <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+          </svg>
+        </button>
+
+        <button class="row-icon-action delete-action nb-btn-sm" title="Delete session">
+          <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
       </div>
     `;
 
@@ -477,7 +483,7 @@ export class PopupController {
     const tag = document.getElementById("saveProfileTag") as HTMLInputElement | null;
     const scope = document.getElementById("saveScopeDisplay");
 
-    if (scope) scope.textContent = this.state.currentDomain || "Active domain";
+    if (scope) scope.textContent = this.state.currentDomain || "active domain";
     if (input) {
       input.value = `Profile ${this.state.sessions.length + 1}`;
     }
@@ -693,14 +699,27 @@ export class PopupController {
       this.toggleTheme();
     });
 
+    // Refresh state button
+    document.getElementById("refreshTabBtn")?.addEventListener("click", () => {
+      this.refreshState();
+      this.showToast("State refreshed");
+    });
+
     // Data Hub (Backup/Sync)
     document.getElementById("dataHubBtn")?.addEventListener("click", () => {
       this.openDataModal();
     });
 
-    // Quick Export from footer
+    // Quick Export from toolbar
     document.getElementById("quickExportBtn")?.addEventListener("click", () => {
       this.openDataModal();
+      document.getElementById("tabExportBtn")?.click();
+    });
+
+    // Quick Import from toolbar
+    document.getElementById("quickImportBtn")?.addEventListener("click", () => {
+      this.openDataModal();
+      document.getElementById("tabImportBtn")?.click();
     });
 
     // Save & Blank buttons
@@ -720,6 +739,17 @@ export class PopupController {
         const tag = (e.currentTarget as HTMLElement).dataset.applyTag;
         const tagInput = document.getElementById("saveProfileTag") as HTMLInputElement | null;
         if (tag && tagInput) tagInput.value = tag;
+      });
+    });
+
+    // Capture scope items click
+    ["optCookies", "optLocalStorage", "optSessionStorage", "optChips"].forEach((id) => {
+      document.getElementById(id)?.addEventListener("click", (e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.classList.toggle("selected");
+        const count = document.querySelectorAll(".scope-select-item.selected").length;
+        const badge = document.getElementById("captureScopeSummary");
+        if (badge) badge.textContent = `${count} SELECTED`;
       });
     });
 

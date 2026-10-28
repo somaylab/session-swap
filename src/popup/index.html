@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Session-Swap v2.0 - Soft Neo-Brutalist Extension Suite</title>
+  <title>Session-Swap v2.0 - Ultra-Wide DevPop Dashboard</title>
   
   <!-- Modern Neo-Brutalist Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,9 +12,9 @@
   
   <link rel="stylesheet" href="style.css" />
 </head>
-<body data-theme="light">
+<body data-theme="dark">
   <div class="nb-popup-frame" id="appFrame">
-    <!-- Top Browser Extension Bar -->
+    <!-- Top Browser Extension Header Bar -->
     <header class="nb-top-bar" data-purpose="extension-header">
       <div class="brand-cluster">
         <div class="brand-icon-box" title="Session-Swap v2.0">
@@ -23,20 +23,25 @@
           </svg>
         </div>
         <div class="brand-text-wrap">
-          <span class="brand-name">Session-Swap</span>
-          <span class="version-tag">v2.0</span>
+          <span class="brand-name">SESSION-SWAP</span>
+          <span class="utility-badge">UTILITY</span>
+        </div>
+
+        <!-- Pinned Active Domain Badge -->
+        <div class="pinned-domain-badge" id="domainPill" title="Active Website Domain">
+          <span class="status-dot" id="statusDot"></span>
+          <span class="domain-text" id="activeDomainDisplay">DETECTING...</span>
         </div>
       </div>
 
       <div class="header-right-cluster">
-        <!-- Pinned URL domain badge -->
-        <div class="pinned-domain-badge" id="domainPill" title="Active Website Domain">
-          <span class="status-dot" id="statusDot"></span>
-          <span class="domain-text" id="activeDomainDisplay">Detecting...</span>
+        <!-- Entries Counter Badge -->
+        <div class="entries-badge" id="entriesBadge">
+          <span id="entriesCountText">0 PROFILES</span>
         </div>
 
         <!-- Data Hub / Portability Button -->
-        <button class="icon-tool-btn nb-btn-sm" id="dataHubBtn" title="Backup & Portability (Export/Import)" aria-label="Backup and portability">
+        <button class="icon-tool-btn nb-btn-sm" id="dataHubBtn" title="Data Hub & Portability (Export/Import)" aria-label="Backup and portability">
           <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
@@ -64,36 +69,16 @@
       </div>
     </header>
 
-    <!-- Action Row -->
-    <section class="nb-action-row" data-purpose="primary-actions">
-      <button class="btn-primary-save nb-btn" id="saveSessionBtn" title="Snapshot and save current session (Ctrl+S)">
-        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 5v14M5 12h14"></path>
-        </svg>
-        <span>+ Save Session</span>
-        <span class="nb-kbd ml-auto">Ctrl+S</span>
-      </button>
-
-      <button class="btn-clean-guest nb-btn" id="newBlankBtn" title="Clear cookies & guest clean slate">
-        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-        </svg>
-        <span>Clean Guest</span>
-      </button>
-    </section>
-
-    <!-- Search & Filter Area -->
-    <section class="nb-filter-area" data-purpose="search-and-filter">
+    <!-- Widescreen Action & Search Toolbar -->
+    <section class="nb-action-toolbar" data-purpose="primary-toolbar">
+      <!-- Search Input with Command Prompt -->
       <div class="search-input-wrap">
-        <svg class="search-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <path d="m21 21-4.3-4.3"></path>
-        </svg>
+        <span class="search-prompt">&gt;</span>
         <input 
           class="nb-search-field" 
           id="searchInput" 
           type="text" 
-          placeholder="Filter profiles..." 
+          placeholder="SEARCH_KEYWORD..." 
           autocomplete="off" 
           spellcheck="false" 
         />
@@ -101,7 +86,51 @@
         <span class="nb-kbd kbd-shortcut" id="searchKbd">[ / ]</span>
       </div>
 
-      <!-- Filter Chips Row -->
+      <!-- Quick Action Buttons Array -->
+      <div class="toolbar-actions-group">
+        <!-- Re-sync/Refresh State Button -->
+        <button class="tb-btn tb-btn-icon nb-btn" id="refreshTabBtn" title="Refresh State">
+          <svg class="tb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"></path>
+          </svg>
+        </button>
+
+        <!-- Save Session Button -->
+        <button class="tb-btn tb-btn-save nb-btn" id="saveSessionBtn" title="Snapshot Current Session (Ctrl+S)">
+          <svg class="tb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+          <span>+ SAVE</span>
+        </button>
+
+        <!-- Quick Export Button -->
+        <button class="tb-btn tb-btn-export nb-btn" id="quickExportBtn" title="Export Sessions JSON">
+          <svg class="tb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
+          </svg>
+          <span>EXPORT</span>
+        </button>
+
+        <!-- Quick Import Button -->
+        <button class="tb-btn tb-btn-import nb-btn" id="quickImportBtn" title="Import Sessions JSON">
+          <svg class="tb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+          </svg>
+          <span>IMPORT</span>
+        </button>
+
+        <!-- Clear Guest / Clean Slate Button -->
+        <button class="tb-btn tb-btn-clear nb-btn" id="newBlankBtn" title="Clear cookies & guest clean slate">
+          <svg class="tb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+          </svg>
+          <span>CLEAR ALL</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Filter Chips Row -->
+    <section class="nb-filter-bar">
       <div class="filter-chips-row" id="tagChipsRow">
         <button class="chip-pill active nb-btn-sm" data-tag="ALL">
           <span>All</span>
@@ -110,7 +139,18 @@
       </div>
     </section>
 
-    <!-- Sessions List (Scrollable Body) -->
+    <!-- Table Header Bar -->
+    <div class="table-columns-header">
+      <span class="col-status">STATUS</span>
+      <span class="col-name">PROFILE NAME</span>
+      <span class="col-tag">TAG</span>
+      <span class="col-domain">DOMAIN</span>
+      <span class="col-payload">PAYLOAD</span>
+      <span class="col-synced">SYNCED</span>
+      <span class="col-actions">ACTIONS</span>
+    </div>
+
+    <!-- Sessions List (Scrollable Widescreen Table Body) -->
     <main class="nb-sessions-scroll" id="profileListContainer" data-purpose="session-items-list">
       <!-- Populated via popupController.ts -->
       <div class="empty-state">
@@ -122,10 +162,10 @@
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
         </div>
-        <h3 class="empty-title">No saved sessions yet</h3>
+        <h3 class="empty-title">NO SAVED SESSIONS YET</h3>
         <p class="empty-subtitle">Save your current login session to switch between multiple accounts easily.</p>
-        <button id="emptySaveBtn" class="btn-primary-save nb-btn" style="width: auto; padding: 6px 16px;">
-          + Save Session
+        <button id="emptySaveBtn" class="tb-btn tb-btn-save nb-btn" style="width: auto; padding: 6px 16px;">
+          + SAVE SESSION
         </button>
       </div>
     </main>
@@ -134,15 +174,15 @@
     <footer class="nb-popup-footer" data-purpose="popup-footer">
       <div class="footer-status-cluster">
         <span class="footer-mint-dot"></span>
-        <span class="footer-count-text" id="profileCountText">0 profiles saved on this domain</span>
+        <span class="footer-count-text" id="profileCountText">0 PROFILES ACTIVE</span>
+      </div>
+      <div class="footer-hints-cluster">
+        <span class="shortcut-hint"><kbd class="nb-kbd">Ctrl+S</kbd> Snapshot</span>
+        <span class="shortcut-hint"><kbd class="nb-kbd">/</kbd> Filter</span>
+        <span class="shortcut-hint"><kbd class="nb-kbd">Esc</kbd> Close</span>
       </div>
       <div class="footer-right-cluster">
-        <span class="footer-version-tag">v2.0 · Session-Swap © Somaylab</span>
-        <button class="footer-quick-btn nb-btn-sm" id="quickExportBtn" title="Export Backup">
-          <svg class="footer-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
-          </svg>
-        </button>
+        <span class="footer-version-tag">v2.0 · Session-Swap © 2026 Somaylab</span>
       </div>
     </footer>
   </div>
@@ -211,7 +251,7 @@
       <div class="capture-scope-card">
         <div class="scope-card-header">
           <span class="scope-card-title">CAPTURE SCOPE</span>
-          <span class="scope-selected-badge" id="captureScopeSummary">3 SELECTED</span>
+          <span class="scope-selected-badge" id="captureScopeSummary">4 SELECTED</span>
         </div>
         <div class="scope-grid-selection">
           <!-- Cookies -->
@@ -264,7 +304,7 @@
   <!-- STATE 3: BACKUP & DATA PORTABILITY MODAL   -->
   <!-- ========================================== -->
   <div id="dataModal" class="modal-backdrop">
-    <div class="modal-dialog-frame" data-purpose="backup-dialog">
+    <div class="modal-dialog-frame modal-dialog-wide" data-purpose="backup-dialog">
       <!-- Modal Header -->
       <div class="modal-header-bar">
         <div>
