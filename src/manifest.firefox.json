@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "session-swap",
-  "version": "1.0.0",
-  "description": "Universal multi-session switcher browser extension with semi neo-brutalism UI",
+  "name": "Session-Swap",
+  "version": "1.2.0",
+  "description": "Universal multi-session manager and partition switcher for browser runtimes",
   "permissions": [
     "storage",
     "tabs",

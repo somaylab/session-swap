@@ -1,7 +1,7 @@
 {
   "name": "session-swap",
-  "version": "1.0.0",
-  "description": "Universal multi-session switcher browser extension with semi neo-brutalism UI",
+  "version": "1.2.0",
+  "description": "Universal multi-session manager and partition switcher for browser runtimes",
   "author": "Somaylab",
   "license": "MIT",
   "type": "module",
