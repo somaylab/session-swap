@@ -44,11 +44,26 @@ export class PopupController {
 
   async init(): Promise<void> {
     try {
+      this.initFooterVersion();
       await this.initTheme();
       this.setupGlobalEvents();
       await this.refreshState();
     } catch (err) {
       this.showToast(`Error initializing: ${(err as Error).message}`);
+    }
+  }
+
+  private initFooterVersion(): void {
+    const versionEl = document.getElementById("footerVersionTag");
+    if (versionEl) {
+      try {
+        const manifestVer = chrome.runtime?.getManifest?.()?.version;
+        if (manifestVer) {
+          versionEl.textContent = manifestVer;
+        }
+      } catch {
+        // Fallback to static text in markup
+      }
     }
   }
 

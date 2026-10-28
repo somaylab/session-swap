@@ -34,7 +34,7 @@ The interface adheres to an ultra-wide 780x600 widescreen developer dashboard la
 │ ( )  │ Dev Superuser      │ #dev     │ .youtube.com │ 19C  14S │ 1d ago  │[SWITCH↵][❐] │
 │ ( )  │ Prod Guest Check   │ #guest   │ .youtube.com │  3C  0S  │ 3d ago  │[SWITCH↵][❐] │
 ├──────┴────────────────────┴──────────┴──────────────┴──────────┴─────────┴─────────────┤
-│ (●) 4 PROFILES ACTIVE     Ctrl+S: Snapshot · /: Filter · Esc: Close     v2.0 · Somaylab│
+│ (●) 4 PROFILES ACTIVE     Ctrl+S: Snapshot · /: Filter · Esc: Close               2.0.0│
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
