@@ -260,13 +260,13 @@ html, body {
   height: 28px;
   border-radius: 6px;
   border: 2px solid var(--ink);
-  background: var(--card-bg);
+  background: #FBBF24;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3px;
+  padding: 2px;
   box-shadow: var(--shadow-sm);
-  color: var(--text-ink);
+  color: #18181B;
   flex-shrink: 0;
 }
 .brand-svg {

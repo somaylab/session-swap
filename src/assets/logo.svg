@@ -1,6 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-  <!-- Back square (outline) -->
-  <rect x="3" y="3" width="12" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="2" />
-  <!-- Front square (overlapping offset) -->
-  <rect x="9" y="9" width="12" height="12" rx="3" fill="currentColor" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Squircle container -->
+  <rect x="1" y="1" width="30" height="30" rx="7" fill="#FBBF24" stroke="#18181B" stroke-width="2"/>
+  <!-- Top arrow -> -->
+  <path d="M6 11h14" stroke="#18181B" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="18,5 26.5,11 18,17" fill="#18181B"/>
+  <!-- Bottom arrow <- -->
+  <path d="M26 21H12" stroke="#18181B" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="14,15 5.5,21 14,27" fill="#18181B"/>
 </svg>
