@@ -98,10 +98,11 @@ export class MessageRouter {
       }
 
       case IPC_ACTIONS.IMPORT_SESSIONS: {
-        const count = await this.sessionManager.importSessions(
-          message.importedProfiles as SessionProfile[]
+        return await this.sessionManager.importSessions(
+          message.importedProfiles,
+          message.fallbackDomain,
+          message.overwrite
         );
-        return { count };
       }
 
       case IPC_ACTIONS.BACKUP_ALL: {

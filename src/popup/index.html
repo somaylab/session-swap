@@ -376,6 +376,8 @@
       <div class="tab-pane" id="importTabContent">
         <p class="tab-instruction-text">Paste JSON payload below, or upload a JSON backup file to restore sessions.</p>
 
+        <div class="import-status-banner" id="importValidationStatus">Paste JSON or select a file to inspect payload</div>
+
         <textarea 
           class="nb-code-textarea import-textarea" 
           id="importJsonArea" 
@@ -395,6 +397,13 @@
           </button>
           <input type="file" id="importFileInput" accept=".json" style="display:none;" />
           <span class="file-chosen-status" id="importFileStatus">No file chosen</span>
+        </div>
+
+        <div class="import-options-bar">
+          <label class="import-overwrite-toggle" for="importOverwriteCheck">
+            <input type="checkbox" id="importOverwriteCheck" class="nb-checkbox-mini" />
+            <span>Overwrite profiles with identical names</span>
+          </label>
         </div>
 
         <div class="modal-actions-row pt-2">

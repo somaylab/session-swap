@@ -761,6 +761,63 @@ export class PopupController {
     this.showToast("Export file downloaded");
   }
 
+  private validateImportPayload(raw: string): { valid: boolean; summary: string } {
+    if (!raw.trim()) {
+      return { valid: false, summary: "Paste JSON or select a file to inspect payload" };
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object" && Array.isArray((parsed as Record<string, unknown>).sessions)) {
+        const count = (parsed as { sessions: unknown[] }).sessions.length;
+        return { valid: true, summary: `✓ Full Backup Archive detected (${count} profile${count === 1 ? "" : "s"})` };
+      }
+      if (Array.isArray(parsed)) {
+        if (parsed.length === 0) {
+          return { valid: false, summary: "⚠ JSON array is empty" };
+        }
+        if (parsed[0] && typeof parsed[0] === "object" && "cookies" in parsed[0]) {
+          return { valid: true, summary: `✓ Profiles Array detected (${parsed.length} profile${parsed.length === 1 ? "" : "s"})` };
+        }
+        if (parsed[0] && typeof parsed[0] === "object" && "name" in parsed[0] && "value" in parsed[0]) {
+          return { valid: true, summary: `✓ Raw Cookie List detected (${parsed.length} cookies, Cookie-Editor format)` };
+        }
+        return { valid: true, summary: `✓ Generic Object Array detected (${parsed.length} item${parsed.length === 1 ? "" : "s"})` };
+      }
+      if (parsed && typeof parsed === "object") {
+        if ("cookies" in parsed || "name" in parsed) {
+          const name = (parsed as { name?: string }).name || "Unnamed Snapshot";
+          return { valid: true, summary: `✓ Single Profile detected: "${name}"` };
+        }
+      }
+      return { valid: false, summary: "⚠ Unrecognized JSON structure for session import" };
+    } catch (e) {
+      return { valid: false, summary: `✕ Invalid JSON: ${(e as Error).message}` };
+    }
+  }
+
+  private updateImportValidationUi(): void {
+    const area = document.getElementById("importJsonArea") as HTMLTextAreaElement | null;
+    const status = document.getElementById("importValidationStatus");
+    if (!area || !status) return;
+
+    const val = area.value;
+    if (!val.trim()) {
+      status.textContent = "Paste JSON or select a file to inspect payload";
+      status.classList.remove("valid", "error");
+      return;
+    }
+
+    const { valid, summary } = this.validateImportPayload(val);
+    status.textContent = summary;
+    if (valid) {
+      status.classList.add("valid");
+      status.classList.remove("error");
+    } else {
+      status.classList.add("error");
+      status.classList.remove("valid");
+    }
+  }
+
   private async handleExecuteImport(): Promise<void> {
     const textarea = document.getElementById("importJsonArea") as HTMLTextAreaElement | null;
     const raw = textarea?.value.trim();
@@ -769,33 +826,62 @@ export class PopupController {
       return;
     }
 
+    const overwriteCheck = document.getElementById("importOverwriteCheck") as HTMLInputElement | null;
+    const overwrite = Boolean(overwriteCheck?.checked);
+
+    let parsed: unknown;
     try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        const res = await this.sendMessage<{ count: number }>({
-          action: IPC_ACTIONS.IMPORT_SESSIONS,
-          importedProfiles: parsed,
-        });
-        document.getElementById("dataModal")?.classList.remove("open");
-        this.showToast(`Successfully imported ${res.count} profiles`);
-        await this.refreshState();
-        return;
-      }
-
-      if (parsed && typeof parsed === "object" && Array.isArray((parsed as Record<string, unknown>).sessions)) {
-        const res = await this.sendMessage<{ restoredSessions: number; restoredDomains: number }>({
-          action: IPC_ACTIONS.RESTORE_ALL,
-          backupPayload: parsed as StorageSchema,
-          overwrite: false,
-        });
-        document.getElementById("dataModal")?.classList.remove("open");
-        this.showToast(`Restored ${res.restoredSessions} sessions across all domains`);
-        await this.refreshState();
-        return;
-      }
-
-      throw new Error("Unrecognized session format. Expected SessionProfile[] or full backup schema.");
+      parsed = JSON.parse(raw);
     } catch (err) {
+      this.showToast(`Invalid JSON: ${(err as Error).message}`);
+      return;
+    }
+
+    try {
+      const res = await this.sendMessage<{ count: number; updated: number; domains: string[] }>({
+        action: IPC_ACTIONS.IMPORT_SESSIONS,
+        importedProfiles: parsed,
+        fallbackDomain: this.state.currentDomain,
+        overwrite,
+      });
+
+      document.getElementById("dataModal")?.classList.remove("open");
+      const total = (res.count || 0) + (res.updated || 0);
+      const details = res.updated > 0 ? ` (${res.updated} updated)` : "";
+      this.showToast(`Imported ${total} profile(s)${details} across ${res.domains?.length || 1} domain(s)`);
+      await this.refreshState();
+    } catch (err) {
+      // Resilient fallback to direct chrome.storage.local if SW is cold
+      try {
+        const rawStore = await chrome.storage.local.get(["ss_sessions"]);
+        const sessions: SessionProfile[] = Array.isArray(rawStore.ss_sessions) ? rawStore.ss_sessions : [];
+        let added = 0;
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
+            if (item && item.cookies) {
+              sessions.push({
+                id: item.id || `sess_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+                name: item.name || `Imported ${sessions.length + 1}`,
+                domain: item.domain || this.state.currentDomain,
+                cookies: item.cookies || [],
+                storage: item.storage || { localStorage: {}, sessionStorage: {} },
+                createdAt: item.createdAt || Date.now(),
+                lastUsed: item.lastUsed || Date.now(),
+                order: sessions.length,
+                tag: item.tag,
+              });
+              added++;
+            }
+          }
+        }
+        if (added > 0) {
+          await chrome.storage.local.set({ ss_sessions: sessions });
+          document.getElementById("dataModal")?.classList.remove("open");
+          this.showToast(`Imported ${added} profile(s) via local storage`);
+          await this.refreshState();
+          return;
+        }
+      } catch {}
       this.showToast(`Import error: ${(err as Error).message}`);
     }
   }
@@ -928,6 +1014,7 @@ export class PopupController {
       tabExport?.classList.remove("active");
       paneImport?.classList.add("active");
       paneExport?.classList.remove("active");
+      this.updateImportValidationUi();
     });
 
     // Scope Radio change
@@ -954,6 +1041,11 @@ export class PopupController {
       fileInput?.click();
     });
 
+    const importJsonArea = document.getElementById("importJsonArea") as HTMLTextAreaElement | null;
+    importJsonArea?.addEventListener("input", () => {
+      this.updateImportValidationUi();
+    });
+
     fileInput?.addEventListener("change", (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
@@ -961,7 +1053,10 @@ export class PopupController {
         const reader = new FileReader();
         reader.onload = (ev) => {
           const area = document.getElementById("importJsonArea") as HTMLTextAreaElement | null;
-          if (area) area.value = ev.target?.result as string;
+          if (area) {
+            area.value = ev.target?.result as string;
+            this.updateImportValidationUi();
+          }
         };
         reader.readAsText(file);
       }

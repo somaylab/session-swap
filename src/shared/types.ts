@@ -109,7 +109,9 @@ export interface IpcExportSessionsMessage extends IpcBaseMessage {
 
 export interface IpcImportSessionsMessage extends IpcBaseMessage {
   action: typeof IPC_ACTIONS.IMPORT_SESSIONS;
-  importedProfiles: SessionProfile[];
+  importedProfiles: unknown;
+  fallbackDomain?: string;
+  overwrite?: boolean;
 }
 
 export interface IpcBackupAllMessage extends IpcBaseMessage {
@@ -118,8 +120,8 @@ export interface IpcBackupAllMessage extends IpcBaseMessage {
 
 export interface IpcRestoreAllMessage extends IpcBaseMessage {
   action: typeof IPC_ACTIONS.RESTORE_ALL;
-  backupPayload: StorageSchema;
-  overwrite: boolean;
+  backupPayload: unknown;
+  overwrite?: boolean;
 }
 
 export type IpcMessage =

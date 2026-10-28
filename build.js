@@ -8,9 +8,11 @@ const __dirname = path.dirname(__filename);
 
 const target = process.argv[2] === "firefox" ? "firefox" : "chrome";
 const isWatch = process.argv.includes("--watch");
-const distDir = path.join(__dirname, "dist");
+const distDir = target === "firefox" 
+  ? path.join(__dirname, "dist-firefox")
+  : path.join(__dirname, "dist");
 
-console.log(`[session-swap] Building for target: ${target.toUpperCase()}...`);
+console.log(`[session-swap] Building for target: ${target.toUpperCase()} into ./${path.basename(distDir)}...`);
 
 // Ensure clean dist directory
 if (fs.existsSync(distDir)) {
@@ -79,7 +81,7 @@ async function buildAll() {
       outfile: path.join(distDir, "popup", "index.js"),
     });
 
-    console.log(`[session-swap] Build completed successfully into ./dist`);
+    console.log(`[session-swap] Build completed successfully into ./${path.basename(distDir)}`);
   } catch (err) {
     console.error("[session-swap] Build failed:", err);
     process.exit(1);

@@ -1,5 +1,5 @@
-import { ActiveSessionsMap, SessionProfile, StorageSchema } from "@shared/types";
-import { generateSessionId } from "@shared/utils";
+import { ActiveSessionsMap, CookieSnapshot, SessionProfile, StorageSchema } from "@shared/types";
+import { extractDomainFromUrl, generateSessionId } from "@shared/utils";
 import { CookieEngine } from "./cookieEngine";
 import { StorageEngine } from "./storageEngine";
 
@@ -7,6 +7,156 @@ const STORAGE_KEYS = {
   SESSIONS: "ss_sessions",
   ACTIVE_MAP: "ss_active_map",
 } as const;
+
+function normalizeDomain(rawDomain: string): string {
+  if (!rawDomain) return "";
+  let clean = rawDomain.trim().toLowerCase();
+  if (clean.startsWith("http://") || clean.startsWith("https://")) {
+    clean = extractDomainFromUrl(clean);
+  }
+  if (clean.startsWith(".")) {
+    clean = clean.slice(1);
+  }
+  if (clean.startsWith("www.")) {
+    clean = clean.slice(4);
+  }
+  return clean.split(":")[0];
+}
+
+function sanitizeCookie(cookie: any, fallbackDomain: string): CookieSnapshot | null {
+  if (!cookie || typeof cookie !== "object" || !cookie.name) return null;
+  const name = String(cookie.name).trim();
+  if (!name) return null;
+  const value = String(cookie.value ?? "");
+  let domain = String(cookie.domain || fallbackDomain || "").trim();
+  if (domain.startsWith("http://") || domain.startsWith("https://")) {
+    domain = extractDomainFromUrl(domain);
+  }
+  const path = String(cookie.path || "/").trim() || "/";
+  const isHost = name.startsWith("__Host-");
+  const isSecure = name.startsWith("__Secure-");
+  const secure = isHost || isSecure || Boolean(cookie.secure);
+  const httpOnly = Boolean(cookie.httpOnly);
+
+  let sameSite: chrome.cookies.SameSiteStatus | undefined = undefined;
+  if (cookie.sameSite) {
+    const ss = String(cookie.sameSite).toLowerCase();
+    if (ss === "no_restriction" || ss === "none") sameSite = "no_restriction";
+    else if (ss === "lax") sameSite = "lax";
+    else if (ss === "strict") sameSite = "strict";
+    else sameSite = "unspecified";
+  }
+
+  let expirationDate: number | undefined = undefined;
+  if (cookie.expirationDate && !cookie.session) {
+    let exp = Number(cookie.expirationDate);
+    if (exp > 1e11) exp = Math.floor(exp / 1000);
+    if (!isNaN(exp) && exp > 0) expirationDate = exp;
+  }
+
+  return {
+    name,
+    value,
+    domain,
+    path: isHost ? "/" : path,
+    secure,
+    httpOnly,
+    sameSite,
+    expirationDate,
+    partitionKey: cookie.partitionKey,
+  };
+}
+
+export function parseAndNormalizeProfiles(
+  rawInput: unknown,
+  fallbackDomain: string = ""
+): SessionProfile[] {
+  let data: any = rawInput;
+  if (typeof data === "string") {
+    try {
+      data = JSON.parse(data.trim());
+    } catch {
+      return [];
+    }
+  }
+
+  if (!data) return [];
+
+  const rawList: any[] = [];
+
+  // Case 1: Backup envelope or object with sessions array
+  if (typeof data === "object" && !Array.isArray(data) && Array.isArray(data.sessions)) {
+    rawList.push(...data.sessions);
+  }
+  // Case 2: Direct array
+  else if (Array.isArray(data)) {
+    // Check if it's an array of raw cookies (e.g. from Cookie-Editor / EditThisCookie)
+    if (data.length > 0 && data[0] && data[0].name && !data[0].cookies && !data[0].storage) {
+      const cookiesByDomain = new Map<string, any[]>();
+      for (const c of data) {
+        if (!c || !c.name) continue;
+        const dom = normalizeDomain(c.domain) || normalizeDomain(fallbackDomain) || "imported-site.com";
+        if (!cookiesByDomain.has(dom)) {
+          cookiesByDomain.set(dom, []);
+        }
+        cookiesByDomain.get(dom)!.push(c);
+      }
+
+      for (const [dom, cList] of cookiesByDomain.entries()) {
+        rawList.push({
+          name: `Cookie-Editor (${dom})`,
+          domain: dom,
+          tag: "Imported",
+          cookies: cList,
+          storage: { localStorage: {}, sessionStorage: {} },
+        });
+      }
+    } else {
+      rawList.push(...data);
+    }
+  }
+  // Case 3: Single SessionProfile object
+  else if (typeof data === "object" && (data.cookies || data.domain || data.name)) {
+    if (Array.isArray(data.cookies)) {
+      rawList.push(data);
+    }
+  }
+
+  const validatedProfiles: SessionProfile[] = [];
+  for (const item of rawList) {
+    if (!item || typeof item !== "object") continue;
+    const dom = normalizeDomain(item.domain || fallbackDomain);
+    if (!dom) continue;
+
+    const name = String(item.name || "").trim() || `Profile ${validatedProfiles.length + 1}`;
+    const rawCookies = Array.isArray(item.cookies) ? item.cookies : [];
+    const sanitizedCookies: CookieSnapshot[] = rawCookies
+      .map((c: any) => sanitizeCookie(c, dom))
+      .filter((c: any): c is CookieSnapshot => c !== null);
+
+    const storage = item.storage && typeof item.storage === "object"
+      ? {
+          localStorage: item.storage.localStorage && typeof item.storage.localStorage === "object" ? item.storage.localStorage : {},
+          sessionStorage: item.storage.sessionStorage && typeof item.storage.sessionStorage === "object" ? item.storage.sessionStorage : {},
+        }
+      : { localStorage: {}, sessionStorage: {} };
+
+    validatedProfiles.push({
+      id: generateSessionId(),
+      name,
+      domain: dom,
+      tag: String(item.tag || "Imported").trim() || "Imported",
+      color: item.color,
+      cookies: sanitizedCookies,
+      storage,
+      createdAt: typeof item.createdAt === "number" ? item.createdAt : Date.now(),
+      lastUsed: Date.now(),
+      order: typeof item.order === "number" ? item.order : 0,
+    });
+  }
+
+  return validatedProfiles;
+}
 
 export class SessionManager {
   private cookieEngine = new CookieEngine();
@@ -166,15 +316,17 @@ export class SessionManager {
   async exportSessions(domain?: string): Promise<SessionProfile[]> {
     const store = await this.getStorageData();
     if (domain) {
-      return store.sessions.filter((s) => s.domain === domain);
+      const clean = normalizeDomain(domain);
+      return store.sessions.filter((s) => s.domain === clean || s.domain === domain);
     }
     return store.sessions;
   }
 
-  async backupAll(): Promise<StorageSchema & { exportedAt: number; version: string }> {
+  async backupAll(): Promise<StorageSchema & { exportedAt: number; version: string; app: string }> {
     const store = await this.getStorageData();
     return {
-      version: "1.1.0",
+      app: "session-swap",
+      version: "2.0.0",
       exportedAt: Date.now(),
       sessions: store.sessions,
       activeSessions: store.activeSessions,
@@ -182,11 +334,13 @@ export class SessionManager {
   }
 
   async restoreAll(
-    backupPayload: Partial<StorageSchema>,
+    backupPayload: unknown,
     overwrite: boolean = false
   ): Promise<{ restoredSessions: number; restoredDomains: number }> {
-    const incomingSessions = Array.isArray(backupPayload.sessions) ? backupPayload.sessions : [];
-    const incomingActive = backupPayload.activeSessions || {};
+    const normalized = parseAndNormalizeProfiles(backupPayload);
+    if (normalized.length === 0) {
+      throw new Error("Backup payload contains no valid session profiles.");
+    }
 
     const store = await this.getStorageData();
     let currentSessions = overwrite ? [] : [...store.sessions];
@@ -194,30 +348,34 @@ export class SessionManager {
     const domainSet = new Set<string>();
 
     let count = 0;
-    for (const item of incomingSessions) {
-      if (!item.name || !item.domain || !Array.isArray(item.cookies)) continue;
-
-      const profile: SessionProfile = {
-        ...item,
-        id: generateSessionId(),
-        createdAt: item.createdAt || Date.now(),
-        lastUsed: Date.now(),
-        order: currentSessions.filter((s) => s.domain === item.domain).length,
-      };
-
-      currentSessions.push(profile);
+    for (const profile of normalized) {
       domainSet.add(profile.domain);
+      const existingIdx = currentSessions.findIndex(
+        (s) => s.domain === profile.domain && s.name.toLowerCase() === profile.name.toLowerCase()
+      );
+
+      if (existingIdx !== -1 && overwrite) {
+        currentSessions[existingIdx] = profile;
+      } else {
+        profile.order = currentSessions.filter((s) => s.domain === profile.domain).length;
+        if (existingIdx !== -1 && !overwrite) {
+          profile.name = `${profile.name} (Restored)`;
+        }
+        currentSessions.push(profile);
+      }
       count++;
     }
 
-    // Merge active map safely
-    Object.entries(incomingActive).forEach(([dom, _sid]) => {
-      // Find matching session in newly restored list
-      const match = currentSessions.find((s) => s.domain === dom);
-      if (match) {
-        currentActive[dom] = match.id;
-      }
-    });
+    if (backupPayload && typeof backupPayload === "object" && (backupPayload as any).activeSessions) {
+      const incomingActive = (backupPayload as any).activeSessions;
+      Object.entries(incomingActive).forEach(([dom, _sid]) => {
+        const cleanDom = normalizeDomain(dom);
+        const match = currentSessions.find((s) => s.domain === cleanDom);
+        if (match) {
+          currentActive[cleanDom] = match.id;
+        }
+      });
+    }
 
     await this.setStorageData({
       sessions: currentSessions,
@@ -227,33 +385,49 @@ export class SessionManager {
     return { restoredSessions: count, restoredDomains: domainSet.size };
   }
 
-  async importSessions(incoming: SessionProfile[]): Promise<number> {
-    if (!Array.isArray(incoming)) {
-      throw new Error("Invalid session backup format");
+  async importSessions(
+    incomingPayload: unknown,
+    fallbackDomain = "",
+    overwrite = false
+  ): Promise<{ count: number; updated: number; domains: string[] }> {
+    const normalized = parseAndNormalizeProfiles(incomingPayload, fallbackDomain);
+    if (normalized.length === 0) {
+      throw new Error("No valid profiles or cookies detected in payload.");
     }
 
     const store = await this.getStorageData();
     let importedCount = 0;
+    let updatedCount = 0;
+    const domainSet = new Set<string>();
 
-    for (const item of incoming) {
-      if (!item.name || !item.domain || !Array.isArray(item.cookies)) {
-        continue;
+    for (const profile of normalized) {
+      domainSet.add(profile.domain);
+      const existingIdx = store.sessions.findIndex(
+        (s) => s.domain === profile.domain && s.name.toLowerCase() === profile.name.toLowerCase()
+      );
+
+      if (existingIdx !== -1 && overwrite) {
+        store.sessions[existingIdx].cookies = profile.cookies;
+        store.sessions[existingIdx].storage = profile.storage;
+        store.sessions[existingIdx].tag = profile.tag;
+        store.sessions[existingIdx].lastUsed = Date.now();
+        updatedCount++;
+      } else {
+        const domainCount = store.sessions.filter((s) => s.domain === profile.domain).length;
+        profile.order = domainCount;
+        if (existingIdx !== -1 && !overwrite) {
+          profile.name = `${profile.name} (Imported)`;
+        }
+        store.sessions.push(profile);
+        importedCount++;
       }
-
-      // Generate fresh ID to prevent collision
-      const profile: SessionProfile = {
-        ...item,
-        id: generateSessionId(),
-        order: (store.sessions.filter((s) => s.domain === item.domain).length) || 0,
-        createdAt: item.createdAt || Date.now(),
-        lastUsed: Date.now(),
-      };
-
-      store.sessions.push(profile);
-      importedCount++;
     }
 
     await this.setStorageData(store);
-    return importedCount;
+    return {
+      count: importedCount,
+      updated: updatedCount,
+      domains: Array.from(domainSet),
+    };
   }
 }
