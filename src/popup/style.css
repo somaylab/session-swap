@@ -822,12 +822,13 @@ html, body {
    Footer Bar
    ========================================================================== */
 .nb-popup-footer {
-  padding: 7px 14px;
+  padding: 8px 18px;
   border-top: 2px solid var(--ink);
   background: var(--footer-bg);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 20px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   flex-shrink: 0;
@@ -836,9 +837,10 @@ html, body {
 .footer-status-cluster {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-weight: 800;
   color: var(--text-ink);
+  flex-shrink: 0;
 }
 
 .footer-mint-dot {
@@ -847,24 +849,27 @@ html, body {
   border-radius: 50%;
   background: var(--pastel-mint-active);
   border: 1px solid var(--ink);
+  flex-shrink: 0;
 }
 
 .footer-hints-cluster {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 20px;
   color: var(--text-muted);
+  margin: 0 auto;
+  flex-shrink: 0;
 }
 .shortcut-hint {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .footer-right-cluster {
   display: flex;
   align-items: center;
-  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .footer-version-tag {
@@ -872,9 +877,9 @@ html, body {
   font-family: 'JetBrains Mono', monospace;
   font-size: 9.5px;
   font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 3px;
-  background: var(--canvas-bg);
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--card-bg);
   border: 1px solid var(--ink);
   letter-spacing: 0.5px;
 }
