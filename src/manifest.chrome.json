@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Session-Swap",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Universal multi-session manager and partition switcher for browser runtimes",
   "permissions": [
     "storage",

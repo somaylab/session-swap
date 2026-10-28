@@ -1,13 +1,13 @@
 # session-swap
 
-[![Version](https://img.shields.io/badge/Version-v1.2.0-0284c7?style=flat-square)](https://github.com/somaylab/session-swap/releases)
+[![Version](https://img.shields.io/badge/Version-v2.0.0-0284c7?style=flat-square)](https://github.com/somaylab/session-swap/releases)
 [![Manifest](https://img.shields.io/badge/Manifest-V3-16a34a?style=flat-square)](#)
 [![Chromium](https://img.shields.io/badge/Chromium-Chrome%20%7C%20Brave%20%7C%20Edge%20%7C%20Opera-7e22ce?style=flat-square)](#)
 [![Firefox](https://img.shields.io/badge/Firefox-Gecko%20Compatible-ea580c?style=flat-square)](#)
 [![Anti-Bot Audit](https://img.shields.io/badge/Anti--Bot%20Audit-100%25%20Passed-22c55e?style=flat-square)](#)
 [![License](https://img.shields.io/badge/License-MIT-ca8a04?style=flat-square)](LICENSE)
 
-Universal multi-session management and partition-switching browser extension engineered for Chromium and Gecko runtimes. Designed with a clean, developer-native interface and architected to support complex identity providers and modern single-page applications including Anthropic Claude, OpenAI ChatGPT, Google Workspace, and OAuth2/OIDC topologies.
+Universal multi-session management and partition-switching browser extension engineered for Chromium and Gecko runtimes. Designed with a pure Soft Neo-Brutalist interface (DevPop Brutal architecture) and engineered to support complex identity providers and modern single-page applications including Anthropic Claude, OpenAI ChatGPT, Google Workspace, and OAuth2/OIDC topologies.
 
 ---
 
@@ -17,29 +17,35 @@ session-swap provides client-side state containerization directly within the bro
 
 ### User Interface Wireframe
 
-The interface adheres to an expansive 540x600 layout engineered for high readability, crisp typography, and comfortable click targets:
+The interface adheres to a tactical 400x600 layout engineered with 0-blur mechanical hard shadows, tactile button travel, and high-contrast developer typography:
 
 ```
-┌───────────────────────────────────────────────────────────────────────────────────────┐
-│ [Mark] Session-Swap            [ (●) chatgpt.com ]        [ Backup/Sync ] [ Theme ]   │
-├───────────────────────────────────────────────────────────────────────────────────────┤
-│ [ + Save Current Session ]               [ Clean Guest Session ]                      │
-├───────────────────────────────────────────────────────────────────────────────────────┤
-│ [ Q Search sessions by name or tag...                                             /]  │
-│ [All Sessions]  [Work]  [Personal]  [Staging]                                         │
-├───────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                       │
-│  ┌────┐  Work Account  [Work]  [● ACTIVE]                                             │
-│  │ W  │  Saved 2m ago · 14 cookies · 2 storages             [✓ In Use] [Edit] [Del]   │
-│  └────┘                                                                               │
-│                                                                                       │
-│  ┌────┐  Personal Account  [Personal]                                                 │
-│  │ P  │  Saved 1h ago · 8 cookies · 1 storage               [ Switch ] [Edit] [Del]   │
-│  └────┘                                                                               │
-│                                                                                       │
-├───────────────────────────────────────────────────────────────────────────────────────┤
-│ (●) 2 sessions stored on chatgpt.com                  v1.2.0 · Session-Swap © Somaylab│
-└───────────────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│ [■] Session-Swap  [v2.0]     [(●) chatgpt.com] [⇄] [☼] │
+├────────────────────────────────────────────────────────┤
+│ [ + Save Session  Ctrl+S ]        [ Clean Guest ]      │
+├────────────────────────────────────────────────────────┤
+│ [ Q Filter profiles...                            [/] ]│
+│ [All 2]  [Staging]  [QA]  [Dev]                        │
+├────────────────────────────────────────────────────────┤
+│                                                        │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │ (●) Staging Admin  [ACTIVE]                      │  │
+│  │     14 cookies • 8 storage keys    [↻] [❐] [✎] [x]│  │
+│  │ ──────────────────────────────────────────────── │  │
+│  │ #staging  Updated 4m ago               ID: stg-01│  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                        │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │ ( ) QA Customer Test                             │  │
+│  │     12 cookies • 4 storage keys   [Switch ↵] [✎] │  │
+│  │ ──────────────────────────────────────────────── │  │
+│  │ #testing  Synced 2h ago                ID: qa-99 │  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                        │
+├────────────────────────────────────────────────────────┤
+│ (●) 2 profiles saved on this domain   v2.0 · Somaylab[↑]│
+└────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -56,7 +62,7 @@ The extension is partitioned into three decoupled layers: the Presentation Layer
 │                                                                                 │
 │  ┌─────────────────────────────┐               ┌─────────────────────────────┐  │
 │  │     ACTIVE BROWSER TAB      │               │    POPUP INTERFACE (UI)     │  │
-│  │      (e.g., claude.ai)      │               │      Expansive 540x600      │  │
+│  │      (e.g., claude.ai)      │               │     DevPop Brutal 400x600   │  │
 │  └──────────────┬──────────────┘               └──────────────┬──────────────┘  │
 │                 │                                             │                 │
 │                 │ DOM Script Injection                        │ Type-Safe IPC   │
