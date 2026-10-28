@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>session-swap</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="brand-row">
+      <div class="brand-title">
+        <span>session-swap</span>
+        <span class="brand-badge">MV3</span>
+      </div>
+      <div class="header-tools">
+        <button id="exportBtn" class="icon-btn" title="Export sessions as JSON">EXPORT</button>
+        <button id="importBtn" class="icon-btn" title="Import sessions from JSON">IMPORT</button>
+      </div>
+    </div>
+    <div class="domain-pill">
+      <span class="domain-text" id="activeDomainLabel">Detecting tab...</span>
+      <span class="pulse-dot" title="Active Host Hook"></span>
+    </div>
+  </header>
+
+  <!-- Quick Action Buttons -->
+  <div class="action-bar">
+    <button id="saveSessionBtn" class="neo-btn btn-primary">
+      <span>💾 SAVE CURRENT</span>
+    </button>
+    <button id="newBlankBtn" class="neo-btn btn-secondary">
+      <span>✨ NEW BLANK</span>
+    </button>
+  </div>
+
+  <!-- Search & Tag Filter -->
+  <div class="search-filter-box">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search saved sessions..." />
+    <div class="tag-pills-row" id="tagFilterRow">
+      <span class="tag-filter-pill active" data-tag="ALL">ALL</span>
+      <span class="tag-filter-pill" data-tag="Work">WORK</span>
+      <span class="tag-filter-pill" data-tag="Personal">PERSONAL</span>
+      <span class="tag-filter-pill" data-tag="Admin">ADMIN</span>
+      <span class="tag-filter-pill" data-tag="QA">QA</span>
+      <span class="tag-filter-pill" data-tag="Bot">BOT</span>
+    </div>
+  </div>
+
+  <!-- Sessions List -->
+  <main class="sessions-container" id="sessionsListContainer">
+    <div class="empty-state">
+      <div class="empty-title">NO SAVED PROFILES</div>
+      <div class="empty-desc">Login to your account and click "SAVE CURRENT" to store this session profile.</div>
+    </div>
+  </main>
+
+  <!-- Save Modal -->
+  <div id="saveModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">Save Session</span>
+        <button class="modal-close-btn" data-modal="saveModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Profile Name</label>
+        <input type="text" id="saveNameInput" class="form-input" placeholder="e.g. Work Account" />
+
+        <label class="form-label">Category Tag</label>
+        <div class="tag-select-row" id="saveTagRow">
+          <span class="tag-option selected" data-tag="Work">Work</span>
+          <span class="tag-option" data-tag="Personal">Personal</span>
+          <span class="tag-option" data-tag="Admin">Admin</span>
+          <span class="tag-option" data-tag="QA">QA</span>
+          <span class="tag-option" data-tag="Bot">Bot</span>
+          <span class="tag-option" data-tag="Default">Other</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="neo-btn btn-secondary" data-modal="saveModal">CANCEL</button>
+        <button id="confirmSaveBtn" class="neo-btn btn-primary">SAVE PROFILE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Modal -->
+  <div id="renameModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">Rename Session</span>
+        <button class="modal-close-btn" data-modal="renameModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Profile Name</label>
+        <input type="text" id="renameNameInput" class="form-input" />
+
+        <label class="form-label">Category Tag</label>
+        <div class="tag-select-row" id="renameTagRow">
+          <span class="tag-option" data-tag="Work">Work</span>
+          <span class="tag-option" data-tag="Personal">Personal</span>
+          <span class="tag-option" data-tag="Admin">Admin</span>
+          <span class="tag-option" data-tag="QA">QA</span>
+          <span class="tag-option" data-tag="Bot">Bot</span>
+          <span class="tag-option" data-tag="Default">Other</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="neo-btn btn-secondary" data-modal="renameModal">CANCEL</button>
+        <button id="confirmRenameBtn" class="neo-btn btn-primary">UPDATE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div id="deleteModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">Delete Session</span>
+        <button class="modal-close-btn" data-modal="deleteModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 12px; font-weight: 600;">Are you sure you want to delete profile <strong id="deleteTargetName"></strong>?</p>
+        <p style="font-size: 10px; color: var(--color-pink); font-weight: 700;">Stored cookies and web storage for this snapshot will be permanently deleted.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="neo-btn btn-secondary" data-modal="deleteModal">CANCEL</button>
+        <button id="confirmDeleteBtn" class="neo-btn btn-danger">CONFIRM DELETE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden File Input for Import -->
+  <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="index.js"></script>
+</body>
+</html>
