@@ -68,6 +68,9 @@ export class StorageEngine {
    * Extracts localStorage and sessionStorage snapshots from the given tab.
    */
   async captureStorageForTab(tabId: number): Promise<StorageSnapshot> {
+    if (!tabId || tabId <= 0) {
+      return { localStorage: {}, sessionStorage: {} };
+    }
     try {
       const results = await chrome.scripting.executeScript({
         target: { tabId },
@@ -85,6 +88,7 @@ export class StorageEngine {
    * Injects localStorage and sessionStorage snapshots into the given tab.
    */
   async restoreStorageForTab(tabId: number, snapshot: StorageSnapshot): Promise<void> {
+    if (!tabId || tabId <= 0) return;
     try {
       await chrome.scripting.executeScript({
         target: { tabId },
@@ -100,6 +104,7 @@ export class StorageEngine {
    * Completely clears web storage for the given tab.
    */
   async clearStorageForTab(tabId: number): Promise<void> {
+    if (!tabId || tabId <= 0) return;
     try {
       await chrome.scripting.executeScript({
         target: { tabId },

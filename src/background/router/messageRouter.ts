@@ -15,11 +15,26 @@ export class MessageRouter {
     _sender: chrome.runtime.MessageSender,
     sendResponse: (response: IpcResponse) => void
   ): boolean {
+    if (!message || typeof message !== "object" || !message.action) {
+      sendResponse({ success: false, error: "Invalid IPC payload" });
+      return false;
+    }
+
     this.process(message)
-      .then((data) => sendResponse({ success: true, data }))
+      .then((data) => {
+        try {
+          sendResponse({ success: true, data });
+        } catch (sendErr) {
+          console.warn("[MessageRouter] Response delivery aborted:", sendErr);
+        }
+      })
       .catch((err: Error) => {
-        console.error("[MessageRouter] Error processing message:", message.action, err);
-        sendResponse({ success: false, error: err.message || "Internal error" });
+        console.error("[MessageRouter] Error processing message:", message?.action, err);
+        try {
+          sendResponse({ success: false, error: err.message || "Internal error" });
+        } catch (sendErr) {
+          console.warn("[MessageRouter] Error response delivery aborted:", sendErr);
+        }
       });
 
     // Return true for async sendResponse

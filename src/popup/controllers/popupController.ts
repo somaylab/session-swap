@@ -1,4 +1,5 @@
 import {
+  ActiveSessionsMap,
   IPC_ACTIONS,
   IpcMessage,
   IpcResponse,
@@ -100,18 +101,67 @@ export class PopupController {
     this.applyTheme(next);
   }
 
-  private async sendMessage<T>(message: IpcMessage): Promise<T> {
-    return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(message, (response: IpcResponse<T>) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-        } else if (!response || !response.success) {
-          reject(new Error(response?.error || "Unknown IPC error"));
-        } else {
-          resolve(response.data as T);
+  private async sendMessage<T>(message: IpcMessage, maxRetries = 3): Promise<T> {
+    let attempt = 0;
+    while (attempt < maxRetries) {
+      attempt++;
+      try {
+        return await new Promise<T>((resolve, reject) => {
+          chrome.runtime.sendMessage(message, (response: IpcResponse<T>) => {
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+            } else if (!response || !response.success) {
+              reject(new Error(response?.error || "Unknown IPC error"));
+            } else {
+              resolve(response.data as T);
+            }
+          });
+        });
+      } catch (err) {
+        const msg = (err as Error).message || "";
+        const isTransient =
+          msg.includes("Could not establish connection") ||
+          msg.includes("Receiving end does not exist") ||
+          msg.includes("message port closed");
+
+        if (isTransient && attempt < maxRetries) {
+          // Service worker is waking up from idle, wait with exponential backoff
+          await new Promise((res) => setTimeout(res, attempt * 120));
+          continue;
         }
-      });
-    });
+        throw err;
+      }
+    }
+    throw new Error("Unable to establish IPC connection with background service worker");
+  }
+
+  private async getLocalStateFallback(domain: string, tabId: number): Promise<PopupState> {
+    try {
+      const raw = await chrome.storage.local.get(["ss_sessions", "ss_active_map"]);
+      const allSessions: SessionProfile[] = Array.isArray(raw.ss_sessions) ? raw.ss_sessions : [];
+      const activeMap: ActiveSessionsMap =
+        raw.ss_active_map && typeof raw.ss_active_map === "object" ? raw.ss_active_map : {};
+
+      const domainSessions = allSessions
+        .filter((s) => s.domain === domain)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const activeId = activeMap[domain] || null;
+
+      return {
+        currentDomain: domain,
+        currentTabId: tabId,
+        sessions: domainSessions,
+        activeSessionId: activeId,
+      };
+    } catch (err) {
+      console.error("[PopupController] Local state fallback error:", err);
+      return {
+        currentDomain: domain,
+        currentTabId: tabId,
+        sessions: [],
+        activeSessionId: null,
+      };
+    }
   }
 
   private async refreshState(): Promise<void> {
@@ -146,11 +196,17 @@ export class PopupController {
     if (saveBtn) saveBtn.disabled = false;
     if (blankBtn) blankBtn.disabled = false;
 
-    const data = await this.sendMessage<PopupState>({
-      action: IPC_ACTIONS.GET_CURRENT_STATE,
-      domain,
-      tabId: this.state.currentTabId,
-    });
+    let data: PopupState;
+    try {
+      data = await this.sendMessage<PopupState>({
+        action: IPC_ACTIONS.GET_CURRENT_STATE,
+        domain,
+        tabId: this.state.currentTabId,
+      });
+    } catch (ipcErr) {
+      console.warn("[PopupController] Background service worker unavailable/waking, reading local store directly:", ipcErr);
+      data = await this.getLocalStateFallback(domain, this.state.currentTabId);
+    }
 
     this.state.sessions = data.sessions || [];
     this.state.activeSessionId = data.activeSessionId || null;
@@ -562,6 +618,19 @@ export class PopupController {
       this.showToast("Profile updated");
       await this.refreshState();
     } catch (err) {
+      try {
+        const raw = await chrome.storage.local.get(["ss_sessions"]);
+        const sessions: SessionProfile[] = Array.isArray(raw.ss_sessions) ? raw.ss_sessions : [];
+        const match = sessions.find((s) => s.id === id);
+        if (match) {
+          match.name = newName;
+          if (tag) match.tag = tag;
+          await chrome.storage.local.set({ ss_sessions: sessions });
+          this.showToast("Profile updated");
+          await this.refreshState();
+          return;
+        }
+      } catch {}
       this.showToast(`Update error: ${(err as Error).message}`);
     }
   }
@@ -591,6 +660,20 @@ export class PopupController {
       this.showToast("Session profile removed");
       await this.refreshState();
     } catch (err) {
+      try {
+        const raw = await chrome.storage.local.get(["ss_sessions", "ss_active_map"]);
+        let sessions: SessionProfile[] = Array.isArray(raw.ss_sessions) ? raw.ss_sessions : [];
+        const match = sessions.find((s) => s.id === id);
+        sessions = sessions.filter((s) => s.id !== id);
+        const activeMap: ActiveSessionsMap = raw.ss_active_map || {};
+        if (match && activeMap[match.domain] === id) {
+          delete activeMap[match.domain];
+        }
+        await chrome.storage.local.set({ ss_sessions: sessions, ss_active_map: activeMap });
+        this.showToast("Session profile removed");
+        await this.refreshState();
+        return;
+      } catch {}
       this.showToast(`Delete failed: ${(err as Error).message}`);
     }
   }
@@ -609,14 +692,30 @@ export class PopupController {
 
     let payload: unknown;
     if (scope === "domain") {
-      payload = await this.sendMessage<SessionProfile[]>({
-        action: IPC_ACTIONS.EXPORT_SESSIONS,
-        domain: this.state.currentDomain,
-      });
+      try {
+        payload = await this.sendMessage<SessionProfile[]>({
+          action: IPC_ACTIONS.EXPORT_SESSIONS,
+          domain: this.state.currentDomain,
+        });
+      } catch {
+        const raw = await chrome.storage.local.get(["ss_sessions"]);
+        const sessions: SessionProfile[] = Array.isArray(raw.ss_sessions) ? raw.ss_sessions : [];
+        payload = sessions.filter((s) => s.domain === this.state.currentDomain);
+      }
     } else {
-      payload = await this.sendMessage<StorageSchema>({
-        action: IPC_ACTIONS.BACKUP_ALL,
-      });
+      try {
+        payload = await this.sendMessage<StorageSchema>({
+          action: IPC_ACTIONS.BACKUP_ALL,
+        });
+      } catch {
+        const raw = await chrome.storage.local.get(["ss_sessions", "ss_active_map"]);
+        payload = {
+          version: "2.0.0",
+          exportedAt: Date.now(),
+          sessions: Array.isArray(raw.ss_sessions) ? raw.ss_sessions : [],
+          activeSessions: raw.ss_active_map || {},
+        };
+      }
     }
 
     const formatted = JSON.stringify(payload, null, 2);

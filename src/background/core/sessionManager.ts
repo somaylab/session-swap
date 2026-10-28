@@ -14,10 +14,14 @@ export class SessionManager {
 
   async getStorageData(): Promise<StorageSchema> {
     const raw = await chrome.storage.local.get([STORAGE_KEYS.SESSIONS, STORAGE_KEYS.ACTIVE_MAP]);
-    return {
-      sessions: (raw[STORAGE_KEYS.SESSIONS] as SessionProfile[]) || [],
-      activeSessions: (raw[STORAGE_KEYS.ACTIVE_MAP] as ActiveSessionsMap) || {},
-    };
+    const sessions = Array.isArray(raw[STORAGE_KEYS.SESSIONS])
+      ? (raw[STORAGE_KEYS.SESSIONS] as SessionProfile[])
+      : [];
+    const activeSessions =
+      raw[STORAGE_KEYS.ACTIVE_MAP] && typeof raw[STORAGE_KEYS.ACTIVE_MAP] === "object"
+        ? (raw[STORAGE_KEYS.ACTIVE_MAP] as ActiveSessionsMap)
+        : {};
+    return { sessions, activeSessions };
   }
 
   private async setStorageData(data: Partial<StorageSchema>): Promise<void> {
@@ -37,6 +41,9 @@ export class SessionManager {
     name: string,
     tag?: string
   ): Promise<SessionProfile> {
+    if (!domain) {
+      throw new Error("Cannot save session: target domain is invalid");
+    }
     const [cookies, storage] = await Promise.all([
       this.cookieEngine.captureCookiesForDomain(domain),
       this.storageEngine.captureStorageForTab(tabId),

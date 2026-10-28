@@ -6,6 +6,7 @@ export class CookieEngine {
    * Captures all relevant cookies for a domain and its related authentication hosts.
    */
   async captureCookiesForDomain(domain: string): Promise<CookieSnapshot[]> {
+    if (!domain) return [];
     try {
       const stores = await chrome.cookies.getAllCookieStores();
       const relatedDomains = getRelatedDomains(domain);
@@ -60,6 +61,7 @@ export class CookieEngine {
    * Deletes all cookies associated with the given domain and its auth cluster.
    */
   async clearCookiesForDomain(domain: string): Promise<void> {
+    if (!domain) return;
     const cookies = await this.captureCookiesForDomain(domain);
     const removePromises = cookies.map(async (cookie) => {
       try {
