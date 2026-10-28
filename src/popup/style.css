@@ -513,6 +513,15 @@ html, body {
   color: var(--btn-import-hover-text);
 }
 
+.tb-btn-backup {
+  background: var(--card-bg);
+  color: var(--text-ink);
+}
+.tb-btn-backup:hover {
+  background: var(--pastel-lavender);
+  color: #FFFFFF;
+}
+
 .tb-btn-clear {
   background: var(--pastel-coral);
   color: #FFFFFF;
@@ -1669,6 +1678,170 @@ html, body {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   color: var(--text-muted);
+}
+
+/* Backup & Restore Styles */
+.backup-section-card {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--card-bg);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.backup-section-card.restore-card {
+  border-color: var(--pastel-coral);
+  background: var(--canvas-bg);
+}
+
+.backup-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.backup-card-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.backup-badge-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1.5px solid var(--ink);
+  letter-spacing: 0.05em;
+}
+.pill-amber {
+  background: var(--pastel-yellow);
+  color: #000000;
+}
+.pill-coral {
+  background: var(--pastel-coral);
+  color: #FFFFFF;
+}
+.backup-card-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-ink);
+}
+.backup-format-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  color: var(--text-muted);
+}
+.backup-card-desc {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.backup-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.backup-stat-box {
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--canvas-bg);
+  border: 1.5px solid var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+.backup-stat-box .stat-number {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--pastel-yellow);
+}
+.backup-stat-box .stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.backup-btn-row {
+  display: flex;
+  gap: 8px;
+}
+.btn-copy-backup,
+.btn-download-backup {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 2px solid var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.1s ease;
+}
+.btn-copy-backup {
+  background: var(--card-bg);
+  color: var(--text-ink);
+}
+.btn-copy-backup:hover {
+  background: var(--pastel-yellow);
+  color: #000000;
+}
+.btn-download-backup {
+  background: var(--pastel-mint-active);
+  color: #000000;
+}
+.btn-download-backup:hover {
+  background: var(--pastel-mint);
+}
+
+.backup-warning-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1.5px solid var(--pastel-coral);
+  color: var(--pastel-coral);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  line-height: 1.35;
+}
+.backup-warning-box svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.btn-confirm-restore {
+  background: var(--pastel-coral);
+  color: #FFFFFF;
+  border: 2px solid var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 7px 14px;
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+.btn-confirm-restore:hover {
+  background: var(--pastel-coral-hover);
 }
 
 /* Toast Popover */

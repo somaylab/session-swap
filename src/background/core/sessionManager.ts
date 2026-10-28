@@ -1,4 +1,11 @@
-import { ActiveSessionsMap, CookieSnapshot, SessionProfile, StorageSchema } from "@shared/types";
+import {
+  ActiveSessionsMap,
+  CookieSnapshot,
+  RestoreResult,
+  SessionProfile,
+  StorageSchema,
+  SystemBackupSnapshotV2,
+} from "@shared/types";
 import { extractDomainFromUrl, generateSessionId } from "@shared/utils";
 import { CookieEngine } from "./cookieEngine";
 import { StorageEngine } from "./storageEngine";
@@ -69,7 +76,8 @@ function sanitizeCookie(cookie: any, fallbackDomain: string): CookieSnapshot | n
 
 export function parseAndNormalizeProfiles(
   rawInput: unknown,
-  fallbackDomain: string = ""
+  fallbackDomain: string = "",
+  preserveExactIdentity: boolean = false
 ): SessionProfile[] {
   let data: any = rawInput;
   if (typeof data === "string") {
@@ -141,17 +149,29 @@ export function parseAndNormalizeProfiles(
         }
       : { localStorage: {}, sessionStorage: {} };
 
+    const id = preserveExactIdentity && item.id && typeof item.id === "string" && item.id.trim()
+      ? item.id.trim()
+      : generateSessionId();
+
+    const tag = preserveExactIdentity
+      ? (typeof item.tag === "string" ? item.tag : undefined)
+      : (String(item.tag || "Imported").trim() || "Imported");
+
+    const createdAt = typeof item.createdAt === "number" ? item.createdAt : Date.now();
+    const lastUsed = preserveExactIdentity && typeof item.lastUsed === "number" ? item.lastUsed : Date.now();
+    const order = typeof item.order === "number" ? item.order : validatedProfiles.length;
+
     validatedProfiles.push({
-      id: generateSessionId(),
+      id,
       name,
       domain: dom,
-      tag: String(item.tag || "Imported").trim() || "Imported",
+      tag,
       color: item.color,
       cookies: sanitizedCookies,
       storage,
-      createdAt: typeof item.createdAt === "number" ? item.createdAt : Date.now(),
-      lastUsed: Date.now(),
-      order: typeof item.order === "number" ? item.order : 0,
+      createdAt,
+      lastUsed,
+      order,
     });
   }
 
@@ -322,67 +342,86 @@ export class SessionManager {
     return store.sessions;
   }
 
-  async backupAll(): Promise<StorageSchema & { exportedAt: number; version: string; app: string }> {
+  async backupAll(): Promise<SystemBackupSnapshotV2> {
     const store = await this.getStorageData();
+    let theme: "dark" | "light" = "dark";
+    try {
+      const rawTheme = await chrome.storage.local.get(["ss_theme"]);
+      if (rawTheme.ss_theme === "light" || rawTheme.ss_theme === "dark") {
+        theme = rawTheme.ss_theme;
+      }
+    } catch {
+      // ignore
+    }
+
     return {
+      format: "session-swap-system-backup",
       app: "session-swap",
       version: "2.0.0",
       exportedAt: Date.now(),
-      sessions: store.sessions,
+      system: {
+        theme,
+      },
       activeSessions: store.activeSessions,
+      sessions: store.sessions,
     };
   }
 
-  async restoreAll(
-    backupPayload: unknown,
-    overwrite: boolean = false
-  ): Promise<{ restoredSessions: number; restoredDomains: number }> {
-    const normalized = parseAndNormalizeProfiles(backupPayload);
+  async restoreAll(backupPayload: unknown): Promise<RestoreResult> {
+    if (!backupPayload || typeof backupPayload !== "object") {
+      throw new Error("Invalid backup payload: Expected an object.");
+    }
+
+    const payload = backupPayload as any;
+    // 1:1 parse with exact identity preservation
+    const normalized = parseAndNormalizeProfiles(payload, "", true);
     if (normalized.length === 0) {
       throw new Error("Backup payload contains no valid session profiles.");
     }
 
-    const store = await this.getStorageData();
-    let currentSessions = overwrite ? [] : [...store.sessions];
-    let currentActive = overwrite ? {} : { ...store.activeSessions };
-    const domainSet = new Set<string>();
+    const restoredSessions: SessionProfile[] = [...normalized];
+    const sessionIds = new Set(restoredSessions.map((s) => s.id));
+    const domainSet = new Set(restoredSessions.map((s) => s.domain));
 
-    let count = 0;
-    for (const profile of normalized) {
-      domainSet.add(profile.domain);
-      const existingIdx = currentSessions.findIndex(
-        (s) => s.domain === profile.domain && s.name.toLowerCase() === profile.name.toLowerCase()
-      );
-
-      if (existingIdx !== -1 && overwrite) {
-        currentSessions[existingIdx] = profile;
-      } else {
-        profile.order = currentSessions.filter((s) => s.domain === profile.domain).length;
-        if (existingIdx !== -1 && !overwrite) {
-          profile.name = `${profile.name} (Restored)`;
+    // Restore exact active sessions mapping
+    const restoredActive: ActiveSessionsMap = {};
+    if (payload.activeSessions && typeof payload.activeSessions === "object") {
+      for (const [rawDom, sId] of Object.entries(payload.activeSessions)) {
+        const dom = normalizeDomain(rawDom);
+        if (typeof sId === "string" && sessionIds.has(sId)) {
+          // Exact session ID preserved 100%
+          restoredActive[dom] = sId;
+        } else {
+          // Fallback if ID was absent or legacy format
+          const match = restoredSessions.find((s) => s.domain === dom);
+          if (match) {
+            restoredActive[dom] = match.id;
+          }
         }
-        currentSessions.push(profile);
       }
-      count++;
     }
 
-    if (backupPayload && typeof backupPayload === "object" && (backupPayload as any).activeSessions) {
-      const incomingActive = (backupPayload as any).activeSessions;
-      Object.entries(incomingActive).forEach(([dom, _sid]) => {
-        const cleanDom = normalizeDomain(dom);
-        const match = currentSessions.find((s) => s.domain === cleanDom);
-        if (match) {
-          currentActive[cleanDom] = match.id;
-        }
-      });
+    // Restore system configuration (theme)
+    let restoredTheme: "dark" | "light" | undefined;
+    if (payload.system && typeof payload.system === "object" && payload.system.theme) {
+      const t = payload.system.theme;
+      if (t === "dark" || t === "light") {
+        restoredTheme = t;
+        await chrome.storage.local.set({ ss_theme: t });
+      }
     }
 
+    // Atomic replacement of storage
     await this.setStorageData({
-      sessions: currentSessions,
-      activeSessions: currentActive,
+      sessions: restoredSessions,
+      activeSessions: restoredActive,
     });
 
-    return { restoredSessions: count, restoredDomains: domainSet.size };
+    return {
+      restoredSessions: restoredSessions.length,
+      restoredDomains: domainSet.size,
+      restoredTheme,
+    };
   }
 
   async importSessions(

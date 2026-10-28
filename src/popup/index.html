@@ -120,6 +120,14 @@
           </svg>
           <span>IMPORT</span>
         </button>
+
+        <!-- Quick Backup Button -->
+        <button class="tb-btn tb-btn-backup nb-btn" id="quickBackupBtn" title="Full 1:1 Database Backup & Restore">
+          <svg class="tb-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+          </svg>
+          <span>BACKUP</span>
+        </button>
       </div>
     </section>
 
@@ -303,17 +311,18 @@
             <svg class="w-modal-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
             </svg>
-            <span>Backup & Portability</span>
+            <span>Data Hub &amp; Portability</span>
           </h2>
-          <p class="modal-subtitle-text">Export profile state or import snapshots.</p>
+          <p class="modal-subtitle-text">Export profiles, import data, or create full 1:1 system backups.</p>
         </div>
         <button class="modal-close-square nb-btn-sm" data-close="dataModal" title="Close">✕</button>
       </div>
 
-      <!-- Tabs Switcher -->
+      <!-- Tabs Switcher: 3 Dedicated Tabs -->
       <div class="nb-tab-switcher">
-        <button class="tab-btn active" id="tabExportBtn">Export JSON</button>
-        <button class="tab-btn" id="tabImportBtn">Import JSON</button>
+        <button class="tab-btn active" id="tabExportBtn">Export Profiles</button>
+        <button class="tab-btn" id="tabImportBtn">Import Profiles</button>
+        <button class="tab-btn" id="tabBackupBtn">Backup &amp; Restore</button>
       </div>
 
       <!-- Export Tab Pane -->
@@ -337,7 +346,7 @@
               <div class="radio-circle"><div class="radio-dot"></div></div>
               <div class="radio-info-wrap">
                 <span class="radio-title">All Domains</span>
-                <span class="radio-subtext">Full archive (.json)</span>
+                <span class="radio-subtext">All profiles (.json)</span>
               </div>
             </div>
           </label>
@@ -422,7 +431,7 @@
           <textarea 
             class="nb-code-textarea import-textarea" 
             id="importJsonArea" 
-            placeholder="Paste JSON session payload, raw Cookie-Editor array, or upload a backup file below..." 
+            placeholder="Paste JSON session payload, raw Cookie-Editor array, or upload a profiles file below..." 
             spellcheck="false"
           ></textarea>
         </div>
@@ -448,13 +457,150 @@
             <input type="file" id="importFileInput" accept=".json,application/json,text/plain" style="display:none;" />
             <span class="file-chosen-status" id="importFileStatus"></span>
           </div>
-          <span class="file-format-hint">Supports: Backup v2, Profile[], Cookie-Editor</span>
+          <span class="file-format-hint">Supports: Profile[], Cookie-Editor</span>
         </div>
 
         <!-- Modal Actions -->
         <div class="modal-actions-row pt-2">
           <button type="button" class="btn-secondary-cancel nb-btn" data-close="dataModal">Cancel</button>
-          <button type="button" class="btn-confirm-save nb-btn" id="confirmImportBtn">Restore Sessions ↵</button>
+          <button type="button" class="btn-confirm-save nb-btn" id="confirmImportBtn">Import Profiles ↵</button>
+        </div>
+      </div>
+
+      <!-- Backup & Restore Tab Pane -->
+      <div class="tab-pane" id="backupTabContent">
+        <!-- 1:1 Backup Snapshot Section -->
+        <div class="backup-section-card">
+          <div class="backup-card-header">
+            <div class="backup-card-title-wrap">
+              <span class="backup-badge-pill pill-amber">SNAPSHOT</span>
+              <span class="backup-card-title">1:1 Full System Backup</span>
+            </div>
+            <span class="backup-format-label">v2.0 Snapshot Archive</span>
+          </div>
+          <p class="backup-card-desc">
+            Creates an atomic, complete snapshot of all session profiles, exact IDs, tags/categories, active session mappings, and theme configurations.
+          </p>
+
+          <!-- Live Database Stats Grid -->
+          <div class="backup-stats-grid">
+            <div class="backup-stat-box">
+              <span class="stat-number" id="backupStatSessions">0</span>
+              <span class="stat-label">SESSIONS</span>
+            </div>
+            <div class="backup-stat-box">
+              <span class="stat-number" id="backupStatDomains">0</span>
+              <span class="stat-label">DOMAINS</span>
+            </div>
+            <div class="backup-stat-box">
+              <span class="stat-number" id="backupStatActive">0</span>
+              <span class="stat-label">ACTIVE TABS</span>
+            </div>
+            <div class="backup-stat-box">
+              <span class="stat-number" id="backupStatTheme">DARK</span>
+              <span class="stat-label">THEME</span>
+            </div>
+          </div>
+
+          <!-- Backup Action Buttons -->
+          <div class="backup-btn-row">
+            <button type="button" class="btn-copy-backup nb-btn" id="copyBackupBtn">
+              <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="1" ry="1"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span id="copyBackupBtnText">Copy Backup JSON</span>
+            </button>
+            <button type="button" class="btn-download-backup nb-btn" id="downloadBackupBtn">
+              <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
+              </svg>
+              <span>Download Backup File</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 1:1 Disaster Recovery Restore Section -->
+        <div class="backup-section-card restore-card">
+          <div class="backup-card-header">
+            <div class="backup-card-title-wrap">
+              <span class="backup-badge-pill pill-coral">RECOVERY</span>
+              <span class="backup-card-title">1:1 Database Restore</span>
+            </div>
+            <span class="backup-format-label">Disaster Recovery</span>
+          </div>
+          <p class="backup-card-desc">
+            Restores 100% of your saved sessions, categories, and settings from a previously created system backup file.
+          </p>
+
+          <!-- File Upload Card Bar for Restore -->
+          <div class="import-file-card">
+            <div class="import-file-left">
+              <button type="button" class="btn-secondary-action nb-btn-sm" id="chooseBackupFileBtn">
+                <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+                <span>Upload Backup File</span>
+              </button>
+              <input type="file" id="backupFileInput" accept=".json,application/json,text/plain" style="display:none;" />
+              <span class="file-chosen-status" id="backupFileStatus"></span>
+            </div>
+            <span class="file-format-hint">Requires: v2.0 Backup Envelope</span>
+          </div>
+
+          <!-- Live Validation Banner for Restore -->
+          <div class="import-status-banner" id="restoreValidationStatus">
+            <span class="status-banner-dot"></span>
+            <span class="status-banner-text" id="restoreValidationStatusText">Upload backup file or paste snapshot JSON below</span>
+          </div>
+
+          <!-- Brutalist Code Box for Restore Payload -->
+          <div class="nb-code-box">
+            <div class="code-box-header">
+              <span class="code-filename-badge">
+                <span class="dot-ink"></span> backup-restore-snapshot.json
+              </span>
+              <div class="code-header-actions">
+                <button type="button" class="btn-code-inline nb-btn-sm" id="pasteBackupClipboardBtn" title="Paste from clipboard">
+                  <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                  </svg>
+                  <span>Paste</span>
+                </button>
+                <button type="button" class="btn-code-inline nb-btn-sm" id="clearBackupAreaBtn" title="Clear input">
+                  <span>Clear</span>
+                </button>
+                <span class="code-size-pill" id="restoreStatusPill">WAITING</span>
+              </div>
+            </div>
+            <textarea 
+              class="nb-code-textarea import-textarea" 
+              id="restoreJsonArea" 
+              placeholder="Paste raw backup JSON snapshot payload here..." 
+              spellcheck="false"
+              style="height: 65px;"
+            ></textarea>
+          </div>
+
+          <!-- Warning Callout Box -->
+          <div class="backup-warning-box">
+            <svg class="w-modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span><strong>Catatan Penting:</strong> Restore akan menimpa database secara 1:1 sesuai kondisi snapshot backup (profil, kategori, sesi aktif &amp; tema kembali 100%).</span>
+          </div>
+
+          <!-- Modal Actions -->
+          <div class="modal-actions-row pt-2">
+            <button type="button" class="btn-secondary-cancel nb-btn" data-close="dataModal">Cancel</button>
+            <button type="button" class="btn-confirm-restore nb-btn" id="confirmRestoreBtn">RESTORE DATABASE 1:1 ↵</button>
+          </div>
         </div>
       </div>
     </div>

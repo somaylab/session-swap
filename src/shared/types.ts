@@ -38,6 +38,27 @@ export interface StorageSchema {
   activeSessions: ActiveSessionsMap;
 }
 
+export interface SystemSettingsSnapshot {
+  theme?: "dark" | "light";
+  [key: string]: unknown;
+}
+
+export interface SystemBackupSnapshotV2 {
+  format: "session-swap-system-backup";
+  app: "session-swap";
+  version: string;
+  exportedAt: number;
+  system: SystemSettingsSnapshot;
+  activeSessions: ActiveSessionsMap;
+  sessions: SessionProfile[];
+}
+
+export interface RestoreResult {
+  restoredSessions: number;
+  restoredDomains: number;
+  restoredTheme?: "dark" | "light";
+}
+
 export const IPC_ACTIONS = {
   GET_CURRENT_STATE: "session_swap:get_current_state",
   SAVE_SESSION: "session_swap:save_session",

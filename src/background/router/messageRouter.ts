@@ -110,10 +110,7 @@ export class MessageRouter {
       }
 
       case IPC_ACTIONS.RESTORE_ALL: {
-        return await this.sessionManager.restoreAll(
-          message.backupPayload,
-          message.overwrite
-        );
+        return await this.sessionManager.restoreAll(message.backupPayload);
       }
 
       default:

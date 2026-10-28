@@ -4,8 +4,10 @@ import {
   IpcMessage,
   IpcResponse,
   PopupState,
+  RestoreResult,
   SessionProfile,
   StorageSchema,
+  SystemBackupSnapshotV2,
 } from "@shared/types";
 import {
   extractDomainFromUrl,
@@ -693,10 +695,16 @@ export class PopupController {
     }
   }
 
-  // Unified Data Hub (Export & Import)
-  private async openDataModal(): Promise<void> {
+  // Unified Data Hub (Export, Import & 1:1 Backup/Restore)
+  private async openDataModal(defaultTab: "export" | "import" | "backup" = "export"): Promise<void> {
     document.getElementById("dataModal")?.classList.add("open");
-    await this.updateExportJson();
+    if (defaultTab === "export") {
+      document.getElementById("tabExportBtn")?.click();
+    } else if (defaultTab === "import") {
+      document.getElementById("tabImportBtn")?.click();
+    } else if (defaultTab === "backup") {
+      document.getElementById("tabBackupBtn")?.click();
+    }
   }
 
   private async updateExportJson(): Promise<void> {
@@ -719,17 +727,12 @@ export class PopupController {
       }
     } else {
       try {
-        payload = await this.sendMessage<StorageSchema>({
-          action: IPC_ACTIONS.BACKUP_ALL,
+        payload = await this.sendMessage<SessionProfile[]>({
+          action: IPC_ACTIONS.EXPORT_SESSIONS,
         });
       } catch {
-        const raw = await chrome.storage.local.get(["ss_sessions", "ss_active_map"]);
-        payload = {
-          version: "2.0.0",
-          exportedAt: Date.now(),
-          sessions: Array.isArray(raw.ss_sessions) ? raw.ss_sessions : [],
-          activeSessions: raw.ss_active_map || {},
-        };
+        const raw = await chrome.storage.local.get(["ss_sessions"]);
+        payload = Array.isArray(raw.ss_sessions) ? raw.ss_sessions : [];
       }
     }
 
@@ -740,6 +743,152 @@ export class PopupController {
       const bytes = new Blob([formatted]).size;
       const sizeText = bytes > 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${bytes} B`;
       sizeBadge.textContent = sizeText;
+    }
+  }
+
+  // --- 1:1 System Backup & Restore Methods ---
+  private async updateBackupTabStats(): Promise<void> {
+    try {
+      const raw = await chrome.storage.local.get(["ss_sessions", "ss_active_map", "ss_theme"]);
+      const sessions: SessionProfile[] = Array.isArray(raw.ss_sessions) ? raw.ss_sessions : [];
+      const activeMap = raw.ss_active_map || {};
+      const domains = new Set(sessions.map((s) => s.domain));
+      const theme = (raw.ss_theme === "light" ? "LIGHT" : "DARK");
+
+      const sElem = document.getElementById("backupStatSessions");
+      const dElem = document.getElementById("backupStatDomains");
+      const aElem = document.getElementById("backupStatActive");
+      const tElem = document.getElementById("backupStatTheme");
+
+      if (sElem) sElem.textContent = String(sessions.length);
+      if (dElem) dElem.textContent = String(domains.size);
+      if (aElem) aElem.textContent = String(Object.keys(activeMap).length);
+      if (tElem) tElem.textContent = theme;
+    } catch {
+      // ignore
+    }
+  }
+
+  private async handleCopyBackup(): Promise<void> {
+    try {
+      const payload = await this.sendMessage<SystemBackupSnapshotV2>({
+        action: IPC_ACTIONS.BACKUP_ALL,
+      });
+      const formatted = JSON.stringify(payload, null, 2);
+      await navigator.clipboard.writeText(formatted);
+      const copyText = document.getElementById("copyBackupBtnText");
+      if (copyText) {
+        const orig = copyText.textContent;
+        copyText.textContent = "COPIED! ✓";
+        setTimeout(() => {
+          copyText.textContent = orig || "Copy Backup JSON";
+        }, 1800);
+      }
+      this.showToast("1:1 Full System Backup copied to clipboard");
+    } catch (err) {
+      this.showToast(`Backup error: ${(err as Error).message}`);
+    }
+  }
+
+  private async handleDownloadBackup(): Promise<void> {
+    try {
+      const payload = await this.sendMessage<SystemBackupSnapshotV2>({
+        action: IPC_ACTIONS.BACKUP_ALL,
+      });
+      const formatted = JSON.stringify(payload, null, 2);
+      const blob = new Blob([formatted], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.download = `session-swap-backup-${dateStr}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      this.showToast("1:1 Backup snapshot downloaded");
+    } catch (err) {
+      this.showToast(`Download error: ${(err as Error).message}`);
+    }
+  }
+
+  private updateRestoreValidationUi(): void {
+    const area = document.getElementById("restoreJsonArea") as HTMLTextAreaElement | null;
+    const statusContainer = document.getElementById("restoreValidationStatus");
+    const statusText = document.getElementById("restoreValidationStatusText");
+    const statusPill = document.getElementById("restoreStatusPill");
+    if (!area || !statusContainer) return;
+
+    const val = area.value.trim();
+    if (!val) {
+      if (statusText) statusText.textContent = "Upload backup file or paste snapshot JSON below";
+      if (statusPill) statusPill.textContent = "WAITING";
+      statusContainer.classList.remove("valid", "error");
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(val);
+      if (parsed && typeof parsed === "object" && Array.isArray((parsed as Record<string, unknown>).sessions)) {
+        const p = parsed as any;
+        const count = p.sessions.length;
+        const domCount = new Set(p.sessions.map((s: any) => s.domain)).size;
+        const theme = p.system?.theme ? `Theme: ${String(p.system.theme).toUpperCase()}` : "Config: Default";
+        const fmt = p.format === "session-swap-system-backup" ? "v2.0 Snapshot" : "Backup Envelope";
+
+        if (statusText) statusText.textContent = `✓ Valid ${fmt}: ${count} profile(s), ${domCount} domain(s), ${theme}`;
+        if (statusPill) statusPill.textContent = "VALID";
+        statusContainer.classList.add("valid");
+        statusContainer.classList.remove("error");
+        return;
+      }
+
+      if (statusText) statusText.textContent = "⚠ Invalid backup: Missing 'sessions' array envelope";
+      if (statusPill) statusPill.textContent = "ERROR";
+      statusContainer.classList.add("error");
+      statusContainer.classList.remove("valid");
+    } catch (err) {
+      if (statusText) statusText.textContent = `✕ Invalid JSON: ${(err as Error).message}`;
+      if (statusPill) statusPill.textContent = "ERROR";
+      statusContainer.classList.add("error");
+      statusContainer.classList.remove("valid");
+    }
+  }
+
+  private async handleExecuteRestore(): Promise<void> {
+    const textarea = document.getElementById("restoreJsonArea") as HTMLTextAreaElement | null;
+    const raw = textarea?.value.trim();
+    if (!raw) {
+      this.showToast("Please upload a backup file or paste snapshot JSON first");
+      return;
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (err) {
+      this.showToast(`Invalid JSON: ${(err as Error).message}`);
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Apakah Bos yakin ingin merestore database 1:1?\n\nSemua sesi profil, kategori, sesi aktif, dan konfigurasi tema saat ini akan digantikan secara penuh sesuai snapshot backup."
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await this.sendMessage<RestoreResult>({
+        action: IPC_ACTIONS.RESTORE_ALL,
+        backupPayload: parsed,
+      });
+
+      if (res.restoredTheme) {
+        this.applyTheme(res.restoredTheme);
+      }
+
+      document.getElementById("dataModal")?.classList.remove("open");
+      this.showToast(`✓ Database 1:1 restored! ${res.restoredSessions} profiles across ${res.restoredDomains} domains`);
+      await this.refreshState();
+    } catch (err) {
+      this.showToast(`Restore error: ${(err as Error).message}`);
     }
   }
 
@@ -926,14 +1075,17 @@ export class PopupController {
 
     // Quick Export from toolbar
     document.getElementById("quickExportBtn")?.addEventListener("click", () => {
-      this.openDataModal();
-      document.getElementById("tabExportBtn")?.click();
+      this.openDataModal("export");
     });
 
     // Quick Import from toolbar
     document.getElementById("quickImportBtn")?.addEventListener("click", () => {
-      this.openDataModal();
-      document.getElementById("tabImportBtn")?.click();
+      this.openDataModal("import");
+    });
+
+    // Quick Backup from toolbar
+    document.getElementById("quickBackupBtn")?.addEventListener("click", () => {
+      this.openDataModal("backup");
     });
 
     // Save & Blank buttons
@@ -1015,27 +1167,31 @@ export class PopupController {
       this.renderProfileList();
     });
 
-    // Data Modal: Tabs
+    // Data Modal: 3 Dedicated Tabs
     const tabExport = document.getElementById("tabExportBtn");
     const tabImport = document.getElementById("tabImportBtn");
+    const tabBackup = document.getElementById("tabBackupBtn");
     const paneExport = document.getElementById("exportTabContent");
     const paneImport = document.getElementById("importTabContent");
+    const paneBackup = document.getElementById("backupTabContent");
 
-    tabExport?.addEventListener("click", () => {
-      tabExport.classList.add("active");
-      tabImport?.classList.remove("active");
-      paneExport?.classList.add("active");
-      paneImport?.classList.remove("active");
-      this.updateExportJson();
-    });
+    const switchDataTab = (target: "export" | "import" | "backup") => {
+      tabExport?.classList.toggle("active", target === "export");
+      tabImport?.classList.toggle("active", target === "import");
+      tabBackup?.classList.toggle("active", target === "backup");
 
-    tabImport?.addEventListener("click", () => {
-      tabImport.classList.add("active");
-      tabExport?.classList.remove("active");
-      paneImport?.classList.add("active");
-      paneExport?.classList.remove("active");
-      this.updateImportValidationUi();
-    });
+      paneExport?.classList.toggle("active", target === "export");
+      paneImport?.classList.toggle("active", target === "import");
+      paneBackup?.classList.toggle("active", target === "backup");
+
+      if (target === "export") this.updateExportJson();
+      if (target === "import") this.updateImportValidationUi();
+      if (target === "backup") this.updateBackupTabStats();
+    };
+
+    tabExport?.addEventListener("click", () => switchDataTab("export"));
+    tabImport?.addEventListener("click", () => switchDataTab("import"));
+    tabBackup?.addEventListener("click", () => switchDataTab("backup"));
 
     // Scope Radio change
     document.querySelectorAll('input[name="exportScope"]').forEach((radio) => {
@@ -1109,6 +1265,67 @@ export class PopupController {
 
     document.getElementById("confirmImportBtn")?.addEventListener("click", () => {
       this.handleExecuteImport();
+    });
+
+    // --- Dedicated Backup & Restore Event Listeners ---
+    document.getElementById("copyBackupBtn")?.addEventListener("click", () => {
+      this.handleCopyBackup();
+    });
+    document.getElementById("downloadBackupBtn")?.addEventListener("click", () => {
+      this.handleDownloadBackup();
+    });
+
+    const backupFileInput = document.getElementById("backupFileInput") as HTMLInputElement | null;
+    const chooseBackupFileBtn = document.getElementById("chooseBackupFileBtn");
+    const backupFileStatus = document.getElementById("backupFileStatus");
+    const restoreJsonArea = document.getElementById("restoreJsonArea") as HTMLTextAreaElement | null;
+
+    chooseBackupFileBtn?.addEventListener("click", () => {
+      backupFileInput?.click();
+    });
+
+    backupFileInput?.addEventListener("change", (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        if (backupFileStatus) backupFileStatus.textContent = `✓ ${file.name}`;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (restoreJsonArea) {
+            restoreJsonArea.value = ev.target?.result as string;
+            this.updateRestoreValidationUi();
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    document.getElementById("pasteBackupClipboardBtn")?.addEventListener("click", async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (restoreJsonArea) {
+          restoreJsonArea.value = text;
+          this.updateRestoreValidationUi();
+        }
+        this.showToast("Pasted snapshot from clipboard");
+      } catch {
+        this.showToast("Clipboard access denied. Press Ctrl+V inside box");
+      }
+    });
+
+    document.getElementById("clearBackupAreaBtn")?.addEventListener("click", () => {
+      if (restoreJsonArea) restoreJsonArea.value = "";
+      if (backupFileInput) backupFileInput.value = "";
+      if (backupFileStatus) backupFileStatus.textContent = "";
+      this.updateRestoreValidationUi();
+      this.showToast("Cleared restore input area");
+    });
+
+    restoreJsonArea?.addEventListener("input", () => {
+      this.updateRestoreValidationUi();
+    });
+
+    document.getElementById("confirmRestoreBtn")?.addEventListener("click", () => {
+      this.handleExecuteRestore();
     });
 
     // Global Keydown shortcuts: Escape, '/', and Ctrl+S / Cmd+S
