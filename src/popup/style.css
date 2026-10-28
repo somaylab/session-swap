@@ -593,13 +593,14 @@ html, body {
   font-size: 10.5px;
   font-weight: 800;
   border-bottom: 2px solid var(--ink);
-  padding: 6px 14px;
+  padding: 6px 12px;
   display: grid;
-  grid-template-columns: 45px 185px 95px 135px 105px 85px 1fr;
+  grid-template-columns: 36px minmax(130px, 1fr) 75px 110px 72px 70px 170px;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   letter-spacing: 0.04em;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 /* ==========================================================================
@@ -608,6 +609,7 @@ html, body {
 .nb-sessions-scroll {
   flex-grow: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   background: var(--canvas-bg);
@@ -615,15 +617,17 @@ html, body {
 
 .session-row-card {
   display: grid;
-  grid-template-columns: 45px 185px 95px 135px 105px 85px 1fr;
+  grid-template-columns: 36px minmax(130px, 1fr) 75px 110px 72px 70px 170px;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
+  gap: 6px;
+  padding: 7px 12px;
   background: var(--card-bg);
   border-bottom: 1.5px solid var(--border-divider);
   transition: background-color 0.1s ease;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
+  box-sizing: border-box;
+  width: 100%;
 }
 .session-row-card:hover {
   background: rgba(245, 158, 11, 0.06);
@@ -638,7 +642,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 45px;
+  width: 100%;
   text-align: center;
 }
 .row-dot {
@@ -655,7 +659,7 @@ html, body {
 
 .col-name {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text-ink);
   overflow: hidden;
@@ -664,12 +668,19 @@ html, body {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+}
+.col-name > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .col-tag {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 .tag-badge {
   display: inline-block;
@@ -678,7 +689,7 @@ html, body {
   font-size: 9.5px;
   font-weight: 700;
   border: 1px solid var(--ink);
-  max-width: 90px;
+  max-width: 70px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -691,6 +702,7 @@ html, body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .col-payload {
@@ -700,6 +712,8 @@ html, body {
   display: flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
+  min-width: 0;
 }
 .payload-chip {
   padding: 1px 5px;
@@ -714,6 +728,7 @@ html, body {
   font-size: 10px;
   color: var(--text-muted);
   white-space: nowrap;
+  min-width: 0;
 }
 
 .col-actions {
@@ -721,6 +736,14 @@ html, body {
   align-items: center;
   justify-content: flex-end;
   gap: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: 100%;
+}
+.table-columns-header .col-actions {
+  justify-content: flex-end;
+  text-align: right;
+  padding-right: 2px;
 }
 
 /* Action Buttons inside Rows */
