@@ -1,6 +1,6 @@
 # session-swap
 
-[![Version](https://img.shields.io/badge/Version-v1.0.0-0284c7?style=flat-square)](https://github.com/somaylab/session-swap/releases)
+[![Version](https://img.shields.io/badge/Version-v1.1.0-0284c7?style=flat-square)](https://github.com/somaylab/session-swap/releases)
 [![Manifest](https://img.shields.io/badge/Manifest-V3-16a34a?style=flat-square)](#)
 [![Chromium](https://img.shields.io/badge/Chromium-Chrome%20%7C%20Brave%20%7C%20Edge%20%7C%20Opera-7e22ce?style=flat-square)](#)
 [![Firefox](https://img.shields.io/badge/Firefox-Gecko%20Compatible-ea580c?style=flat-square)](#)
