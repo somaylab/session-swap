@@ -1330,21 +1330,28 @@ html, body {
 }
 
 .radio-circle {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  border: 1.5px solid var(--ink);
-  background: var(--card-bg);
+  border: 2px solid #64748B;
+  background: var(--canvas-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: all 0.15s ease;
 }
 .radio-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: transparent;
+  transition: all 0.15s ease;
+}
+.radio-card-label input:checked + .radio-card-box .radio-circle {
+  border: 2px solid #000000;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
 }
 .radio-card-label input:checked + .radio-card-box .radio-dot {
   background: #000000;
