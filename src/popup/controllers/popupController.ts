@@ -870,7 +870,7 @@ export class PopupController {
     }
 
     const confirmed = window.confirm(
-      "Apakah Bos yakin ingin merestore database 1:1?\n\nSemua sesi profil, kategori, sesi aktif, dan konfigurasi tema saat ini akan digantikan secara penuh sesuai snapshot backup."
+      "Are you sure you want to restore the database 1:1?\n\nAll current session profiles, categories, active session mappings, and theme configuration will be completely replaced with the backup snapshot state."
     );
     if (!confirmed) return;
 
