@@ -21,20 +21,20 @@ The interface adheres to an ultra-wide 780x600 widescreen developer dashboard la
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [⇄] SESSION-SWAP            [(●) WWW.YOUTUBE.COM]         [ 4 PROFILES ]   [⇄]   [☼]   │
+│ [#] SESSION-SWAP              [(o) WWW.YOUTUBE.COM]         [ 4 PROFILES ]   [<>]   [*]│
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ [ > SEARCH_KEYWORD...                     [/] ]    [↻]     [+ SAVE]   [EXPORT] [IMPORT]│
+│ [ > SEARCH_KEYWORD...                     [/] ]    [R]     [+ SAVE]   [EXPORT] [IMPORT]│
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │ [All 4]  [Staging 1]  [QA 1]  [Dev 1]  [Work 1]                                        │
 ├──────┬────────────────────┬──────────┬──────────────┬──────────┬─────────┬─────────────┤
 │STATE │ PROFILE NAME       │ TAG      │ DOMAIN       │ PAYLOAD  │ SYNCED  │ ACTIONS     │
 ├──────┼────────────────────┼──────────┼──────────────┼──────────┼─────────┼─────────────┤
-│ (●)  │ Staging Admin[ACT] │ #staging │ .youtube.com │ 14C  8S  │ 4m ago  │ [↻][❐][✎][x]│
-│ ( )  │ QA Customer Test   │ #testing │ .youtube.com │ 12C  4S  │ 2h ago  │[SWITCH↵][❐] │
-│ ( )  │ Dev Superuser      │ #dev     │ .youtube.com │ 19C  14S │ 1d ago  │[SWITCH↵][❐] │
-│ ( )  │ Prod Guest Check   │ #guest   │ .youtube.com │  3C  0S  │ 3d ago  │[SWITCH↵][❐] │
+│ (*)  │ Staging Admin[ACT] │ #staging │ .youtube.com │ 14C  8S  │ 4m ago  │ [R][C][E][X]│
+│ ( )  │ QA Customer Test   │ #testing │ .youtube.com │ 12C  4S  │ 2h ago  │ [SWITCH] [C]│
+│ ( )  │ Dev Superuser      │ #dev     │ .youtube.com │ 19C  14S │ 1d ago  │ [SWITCH] [C]│
+│ ( )  │ Prod Guest Check   │ #guest   │ .youtube.com │  3C  0S  │ 3d ago  │ [SWITCH] [C]│
 ├──────┴────────────────────┴──────────┴──────────────┴──────────┴─────────┴─────────────┤
-│ (●) 4 PROFILES ACTIVE     Ctrl+S: Snapshot · /: Filter · Esc: Close               2.0.0│
+│ (*) 4 PROFILES ACTIVE     Ctrl+S: Snapshot | /: Filter | Esc: Close               2.0.0│
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
