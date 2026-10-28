@@ -20,26 +20,26 @@ session-swap provides client-side state containerization directly within the bro
 The interface adheres to an expansive 540x600 layout engineered for high readability, crisp typography, and comfortable click targets:
 
 ```
-+---------------------------------------------------------------------------------------+
-| [Mark] Session-Swap  v1.2.0    [ (o) chatgpt.com ]        [ Backup/Sync ] [ Theme ]   |  Header (56px)
-+---------------------------------------------------------------------------------------+
-| [ + Save Current Session ]               [ Clean Guest Session ]                      |  Action Banner
-+---------------------------------------------------------------------------------------+
-| [ Q Search sessions by name or tag...                                             /]  |  Search Input
-| [All Sessions]  [Work]  [Personal]  [Staging]                                         |  Tag Filter Chips
-+---------------------------------------------------------------------------------------+
-|                                                                                       |
-|  +----+  Work Account  [Work]  [● ACTIVE]                                             |
-|  | W  |  Saved 2m ago · 14 cookies · 2 storages             [✓ In Use] [Edit] [Del]   |  Active Card
-|  +----+                                                                               |
-|                                                                                       |
-|  +----+  Personal Account  [Personal]                                                 |
-|  | P  |  Saved 1h ago · 8 cookies · 1 storage               [ Switch ] [Edit] [Del]   |  Saved Card
-|  +----+                                                                               |
-|                                                                                       |
-+---------------------------------------------------------------------------------------+
-| 2 sessions stored on chatgpt.com                          Session-Swap © 2026 Somaylab|  Footer (32px)
-+---------------------------------------------------------------------------------------+
+┌───────────────────────────────────────────────────────────────────────────────────────┐
+│ [Mark] Session-Swap  v1.2.0    [ (●) chatgpt.com ]        [ Backup/Sync ] [ Theme ]   │
+├───────────────────────────────────────────────────────────────────────────────────────┤
+│ [ + Save Current Session ]               [ Clean Guest Session ]                      │
+├───────────────────────────────────────────────────────────────────────────────────────┤
+│ [ Q Search sessions by name or tag...                                             /]  │
+│ [All Sessions]  [Work]  [Personal]  [Staging]                                         │
+├───────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│  ┌────┐  Work Account  [Work]  [● ACTIVE]                                             │
+│  │ W  │  Saved 2m ago · 14 cookies · 2 storages             [✓ In Use] [Edit] [Del]   │
+│  └────┘                                                                               │
+│                                                                                       │
+│  ┌────┐  Personal Account  [Personal]                                                 │
+│  │ P  │  Saved 1h ago · 8 cookies · 1 storage               [ Switch ] [Edit] [Del]   │
+│  └────┘                                                                               │
+│                                                                                       │
+├───────────────────────────────────────────────────────────────────────────────────────┤
+│ 2 sessions stored on chatgpt.com                          Session-Swap © 2026 Somaylab│
+└───────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -51,41 +51,42 @@ The extension is partitioned into three decoupled layers: the Presentation Layer
 ### System Topology Diagram
 
 ```
-+---------------------------------------------------------------------------------+
-|                            BROWSER CLIENT RUNTIME                               |
-|                                                                                 |
-|  +-----------------------------+               +-----------------------------+  |
-|  |      ACTIVE BROWSER TAB     |               |     POPUP INTERFACE (UI)    |  |
-|  |     (e.g., claude.ai)       |               |    Precision Native Layout  |  |
-|  +--------------+--------------+               +--------------+--------------+  |
-|                 |                                             |                 |
-|                 | DOM Script Injection                        | Type-Safe IPC   |
-|                 v                                             v                 |
-|  +---------------------------------------------------------------------------+  |
-|  |                   BACKGROUND SERVICE WORKER (CORE ENGINE)                 |  |
-|  |                                                                           |  |
-|  |   +--------------------------+          +-----------------------------+   |  |
-|  |   |       CookieEngine       |          |        StorageEngine        |   |  |
-|  |   |  - Cluster Resolution    |          |  - LocalStorage Serializer  |   |  |
-|  |   |  - RFC 6265bis Rules     |          |  - SessionStorage Injector  |   |  |
-|  |   |  - CHIPS PartitionKey    |          |  - Atomic Flush & Restore   |   |  |
-|  |   +------------+-------------+          +--------------+--------------+   |  |
-|  |                |                                       |                  |  |
-|  |                +-------------------+-------------------+                  |  |
-|  |                                    |                                      |  |
-|  |                                    v                                      |  |
-|  |                         +----------------------+                          |  |
-|  |                         |    SessionManager    |                          |  |
-|  |                         |   Snapshot & Switch  |                          |  |
-|  |                         +----------+-----------+                          |  |
-|  |                                    |                                      |  |
-|  +------------------------------------|--------------------------------------+  |
-|                                       v                                         |
-|                      +----------------------------------+                       |
-|                      |       chrome.storage.local       |                       |
-|                      |    Sandboxed Profile Database    |                       |
-|                      +----------------------------------+                       |
-+---------------------------------------------------------------------------------+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                             BROWSER CLIENT RUNTIME                              │
+│                                                                                 │
+│  ┌─────────────────────────────┐               ┌─────────────────────────────┐  │
+│  │     ACTIVE BROWSER TAB      │               │    POPUP INTERFACE (UI)     │  │
+│  │      (e.g., claude.ai)      │               │      Expansive 540x600      │  │
+│  └──────────────┬──────────────┘               └──────────────┬──────────────┘  │
+│                 │                                             │                 │
+│                 │ DOM Script Injection                        │ Type-Safe IPC   │
+│                 ▼                                             ▼                 │
+│  ┌───────────────────────────────────────────────────────────────────────────┐  │
+│  │                   BACKGROUND SERVICE WORKER (CORE ENGINE)                 │  │
+│  │                                                                           │  │
+│  │   ┌──────────────────────────┐          ┌─────────────────────────────┐   │  │
+│  │   │       CookieEngine       │          │        StorageEngine        │   │  │
+│  │   │  - Cluster Resolution    │          │  - LocalStorage Serializer  │   │  │
+│  │   │  - RFC 6265bis Rules     │          │  - SessionStorage Injector  │   │  │
+│  │   │  - CHIPS PartitionKey    │          │  - Atomic Flush & Restore   │   │  │
+│  │   └────────────┬─────────────┘          └──────────────┬──────────────┘   │  │
+│  │                │                                       │                  │  │
+│  │                └───────────────────┬───────────────────┘                  │  │
+│  │                                    │                                      │  │
+│  │                                    ▼                                      │  │
+│  │                         ┌──────────────────────┐                          │  │
+│  │                         │    SessionManager    │                          │  │
+│  │                         │   Snapshot & Switch  │                          │  │
+│  │                         └──────────┬───────────┘                          │  │
+│  │                                    │                                      │  │
+│  └────────────────────────────────────┼──────────────────────────────────────┘  │
+│                                       │                                         │
+│                                       ▼                                         │
+│                      ┌──────────────────────────────────┐                       │
+│                      │       chrome.storage.local       │                       │
+│                      │    Sandboxed Profile Database    │                       │
+│                      └──────────────────────────────────┘                       │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -95,31 +96,43 @@ The extension is partitioned into three decoupled layers: the Presentation Layer
 When switching between profiles or initializing a guest session, session-swap follows a strict sequential lifecycle to prevent token leakage:
 
 ```
-[User triggers Switch on Target Profile]
-                   |
-                   v
-[Step 1: Domain Cluster Identification]
-Resolves primary domain and authentication subdomains
-(e.g., chatgpt.com + .chatgpt.com + auth.openai.com)
-                   |
-                   v
-[Step 2: Atomic Cookie Eviction & Injection]
-Clears active domain cookies via chrome.cookies.remove
-Sets snapshot cookies preserving __Host-, __Secure-, and CHIPS partitionKey
-                   |
-                   v
-[Step 3: WebStorage Synchronous Overwrite]
-Executes DOM script targeting active tab ID
-Flushes window.localStorage and window.sessionStorage
-Re-populates keys from stored profile snapshot
-                   |
-                   v
-[Step 4: Cache-Bypass Hard Reload]
-Executes chrome.tabs.reload(tabId, { bypassCache: true })
-Purges Service Worker network response cache
-                   |
-                   v
-[Authenticated Session Restored with Zero Collision]
+┌──────────────────────────────────────────────────────────────┐
+│            User triggers Switch on Target Profile            │
+└──────────────────────────────┬───────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│            Step 1: Domain Cluster Identification             │
+│   Resolves apex domain and authentication subdomains         │
+│   (e.g., chatgpt.com + .chatgpt.com + auth.openai.com)       │
+└──────────────────────────────┬───────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│          Step 2: Atomic Cookie Eviction & Injection          │
+│   Clears active domain cookies via chrome.cookies.remove     │
+│   Sets snapshot cookies preserving __Host-, __Secure-, CHIPS │
+└──────────────────────────────┬───────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│           Step 3: WebStorage Synchronous Overwrite           │
+│   Executes DOM script targeting active tab ID                │
+│   Flushes window.localStorage and window.sessionStorage      │
+│   Re-populates keys from stored profile snapshot             │
+└──────────────────────────────┬───────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│              Step 4: Cache-Bypass Hard Reload                │
+│   Executes chrome.tabs.reload(tabId, { bypassCache: true })  │
+│   Purges Service Worker network response cache               │
+└──────────────────────────────┬───────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│     Authenticated Session Restored with Zero Collision       │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
