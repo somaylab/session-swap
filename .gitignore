@@ -1,0 +1,29 @@
+# Secret Tokens & Reference Material
+github-token.txt
+reference-session-switcher/
+*.pem
+*.key
+
+# Dependencies & Build Output
+node_modules/
+dist/
+dist-*/
+build/
+.cache/
+
+# OS and Editor Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
