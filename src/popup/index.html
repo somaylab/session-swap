@@ -374,41 +374,87 @@
 
       <!-- Import Tab Pane -->
       <div class="tab-pane" id="importTabContent">
-        <p class="tab-instruction-text">Paste JSON payload below, or upload a JSON backup file to restore sessions.</p>
+        <!-- Radio Strategy Selection (Symmetrical to Export Scope) -->
+        <div class="scope-radio-grid">
+          <label class="radio-card-label">
+            <input type="radio" name="importMergeMode" value="merge" checked class="radio-hidden" id="importModeMergeRadio" />
+            <div class="radio-card-box">
+              <div class="radio-circle"><div class="radio-dot"></div></div>
+              <div class="radio-info-wrap">
+                <span class="radio-title">Safe Merge</span>
+                <span class="radio-subtext">Preserve existing, add new</span>
+              </div>
+            </div>
+          </label>
 
-        <div class="import-status-banner" id="importValidationStatus">Paste JSON or select a file to inspect payload</div>
-
-        <textarea 
-          class="nb-code-textarea import-textarea" 
-          id="importJsonArea" 
-          placeholder="Paste session or full database backup JSON here..." 
-          spellcheck="false"
-        ></textarea>
-
-        <div class="import-file-toolbar">
-          <button class="btn-secondary-action nb-btn-sm" id="chooseFileBtn">
-            <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="12" y1="18" x2="12" y2="12"></line>
-              <line x1="9" y1="15" x2="15" y2="15"></line>
-            </svg>
-            <span>Upload JSON File</span>
-          </button>
-          <input type="file" id="importFileInput" accept=".json" style="display:none;" />
-          <span class="file-chosen-status" id="importFileStatus">No file chosen</span>
-        </div>
-
-        <div class="import-options-bar">
-          <label class="import-overwrite-toggle" for="importOverwriteCheck">
-            <input type="checkbox" id="importOverwriteCheck" class="nb-checkbox-mini" />
-            <span>Overwrite profiles with identical names</span>
+          <label class="radio-card-label">
+            <input type="radio" name="importMergeMode" value="overwrite" class="radio-hidden" id="importModeOverwriteRadio" />
+            <div class="radio-card-box">
+              <div class="radio-circle"><div class="radio-dot"></div></div>
+              <div class="radio-info-wrap">
+                <span class="radio-title">Overwrite Mode</span>
+                <span class="radio-subtext">Update matching profiles</span>
+              </div>
+            </div>
           </label>
         </div>
 
+        <!-- Brutalist Monospaced Code Box -->
+        <div class="nb-code-box">
+          <div class="code-box-header">
+            <span class="code-filename-badge">
+              <span class="dot-ink"></span> session-swap-import.json
+            </span>
+            <div class="code-header-actions">
+              <button type="button" class="btn-code-inline nb-btn-sm" id="pasteClipboardBtn" title="Paste from clipboard">
+                <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+                <span>Paste</span>
+              </button>
+              <button type="button" class="btn-code-inline nb-btn-sm" id="clearImportAreaBtn" title="Clear input">
+                <span>Clear</span>
+              </button>
+              <span class="code-size-pill" id="importStatusPill">WAITING</span>
+            </div>
+          </div>
+          <textarea 
+            class="nb-code-textarea import-textarea" 
+            id="importJsonArea" 
+            placeholder="Paste JSON session payload, raw Cookie-Editor array, or upload a backup file below..." 
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <!-- Live Validation Banner -->
+        <div class="import-status-banner" id="importValidationStatus">
+          <span class="status-banner-dot"></span>
+          <span class="status-banner-text" id="importValidationStatusText">Paste JSON or select a file to inspect payload</span>
+        </div>
+
+        <!-- File Upload Card Bar -->
+        <div class="import-file-card">
+          <div class="import-file-left">
+            <button type="button" class="btn-secondary-action nb-btn-sm" id="chooseFileBtn">
+              <svg class="w-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+              </svg>
+              <span>Upload JSON File</span>
+            </button>
+            <input type="file" id="importFileInput" accept=".json,application/json,text/plain" style="display:none;" />
+            <span class="file-chosen-status" id="importFileStatus"></span>
+          </div>
+          <span class="file-format-hint">Supports: Backup v2, Profile[], Cookie-Editor</span>
+        </div>
+
+        <!-- Modal Actions -->
         <div class="modal-actions-row pt-2">
-          <button class="btn-secondary-cancel nb-btn" data-close="dataModal">Cancel</button>
-          <button class="btn-confirm-save nb-btn" id="confirmImportBtn">Restore Sessions ↵</button>
+          <button type="button" class="btn-secondary-cancel nb-btn" data-close="dataModal">Cancel</button>
+          <button type="button" class="btn-confirm-save nb-btn" id="confirmImportBtn">Restore Sessions ↵</button>
         </div>
       </div>
     </div>

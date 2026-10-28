@@ -47,7 +47,13 @@ export class PopupController {
     try {
       this.initFooterVersion();
       await this.initTheme();
+    } catch {}
+
+    try {
       this.setupGlobalEvents();
+    } catch {}
+
+    try {
       await this.refreshState();
     } catch (err) {
       this.showToast(`Error initializing: ${(err as Error).message}`);
@@ -69,12 +75,21 @@ export class PopupController {
   }
 
   private async initTheme(): Promise<void> {
-    const raw = await chrome.storage.local.get(["ss_theme"]);
-    if (raw.ss_theme) {
-      this.currentTheme = raw.ss_theme === "light" ? "light" : "dark";
-    } else {
-      const isSystemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      this.currentTheme = isSystemDark ? "dark" : "light";
+    try {
+      if (typeof chrome !== "undefined" && chrome.storage?.local) {
+        const raw = await chrome.storage.local.get(["ss_theme"]);
+        if (raw.ss_theme) {
+          this.currentTheme = raw.ss_theme === "light" ? "light" : "dark";
+        } else {
+          const isSystemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          this.currentTheme = isSystemDark ? "dark" : "light";
+        }
+      } else {
+        const isSystemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        this.currentTheme = isSystemDark ? "dark" : "light";
+      }
+    } catch {
+      this.currentTheme = "dark";
     }
     this.applyTheme(this.currentTheme);
   }
@@ -797,24 +812,29 @@ export class PopupController {
 
   private updateImportValidationUi(): void {
     const area = document.getElementById("importJsonArea") as HTMLTextAreaElement | null;
-    const status = document.getElementById("importValidationStatus");
-    if (!area || !status) return;
+    const statusContainer = document.getElementById("importValidationStatus");
+    const statusText = document.getElementById("importValidationStatusText");
+    const statusPill = document.getElementById("importStatusPill");
+    if (!area || !statusContainer) return;
 
     const val = area.value;
     if (!val.trim()) {
-      status.textContent = "Paste JSON or select a file to inspect payload";
-      status.classList.remove("valid", "error");
+      if (statusText) statusText.textContent = "Paste JSON or select a file to inspect payload";
+      if (statusPill) statusPill.textContent = "WAITING";
+      statusContainer.classList.remove("valid", "error");
       return;
     }
 
     const { valid, summary } = this.validateImportPayload(val);
-    status.textContent = summary;
+    if (statusText) statusText.textContent = summary;
     if (valid) {
-      status.classList.add("valid");
-      status.classList.remove("error");
+      statusContainer.classList.add("valid");
+      statusContainer.classList.remove("error");
+      if (statusPill) statusPill.textContent = "VALID";
     } else {
-      status.classList.add("error");
-      status.classList.remove("valid");
+      statusContainer.classList.add("error");
+      statusContainer.classList.remove("valid");
+      if (statusPill) statusPill.textContent = "ERROR";
     }
   }
 
@@ -826,8 +846,8 @@ export class PopupController {
       return;
     }
 
-    const overwriteCheck = document.getElementById("importOverwriteCheck") as HTMLInputElement | null;
-    const overwrite = Boolean(overwriteCheck?.checked);
+    const overwriteRadio = document.getElementById("importModeOverwriteRadio") as HTMLInputElement | null;
+    const overwrite = Boolean(overwriteRadio?.checked);
 
     let parsed: unknown;
     try {
@@ -1032,13 +1052,38 @@ export class PopupController {
       this.handleDownloadExport();
     });
 
-    // File Upload for Import
+    // Import Toolbar & Action Buttons
     const fileInput = document.getElementById("importFileInput") as HTMLInputElement | null;
     const chooseFileBtn = document.getElementById("chooseFileBtn");
     const fileStatus = document.getElementById("importFileStatus");
 
     chooseFileBtn?.addEventListener("click", () => {
       fileInput?.click();
+    });
+
+    // Paste from clipboard button
+    document.getElementById("pasteClipboardBtn")?.addEventListener("click", async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        const area = document.getElementById("importJsonArea") as HTMLTextAreaElement | null;
+        if (area) {
+          area.value = text;
+          this.updateImportValidationUi();
+        }
+        this.showToast("Pasted payload from clipboard");
+      } catch {
+        this.showToast("Clipboard access denied. Press Ctrl+V inside box");
+      }
+    });
+
+    // Clear import textarea
+    document.getElementById("clearImportAreaBtn")?.addEventListener("click", () => {
+      const area = document.getElementById("importJsonArea") as HTMLTextAreaElement | null;
+      if (area) area.value = "";
+      if (fileInput) fileInput.value = "";
+      if (fileStatus) fileStatus.textContent = "";
+      this.updateImportValidationUi();
+      this.showToast("Cleared input area");
     });
 
     const importJsonArea = document.getElementById("importJsonArea") as HTMLTextAreaElement | null;
@@ -1049,7 +1094,7 @@ export class PopupController {
     fileInput?.addEventListener("change", (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
-        if (fileStatus) fileStatus.textContent = file.name;
+        if (fileStatus) fileStatus.textContent = `✓ ${file.name}`;
         const reader = new FileReader();
         reader.onload = (ev) => {
           const area = document.getElementById("importJsonArea") as HTMLTextAreaElement | null;

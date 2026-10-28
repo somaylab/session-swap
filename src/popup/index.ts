@@ -5,13 +5,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   await controller.init();
 
   // Auto-refresh if user changes tabs while popup is open
-  chrome.tabs.onActivated.addListener(() => {
-    controller.init();
-  });
-
-  chrome.tabs.onUpdated.addListener((_tabId, changeInfo) => {
-    if (changeInfo.status === "complete") {
+  try {
+    chrome.tabs?.onActivated?.addListener?.(() => {
       controller.init();
-    }
-  });
+    });
+
+    chrome.tabs?.onUpdated?.addListener?.((_tabId, changeInfo) => {
+      if (changeInfo.status === "complete") {
+        controller.init();
+      }
+    });
+  } catch {}
 });
