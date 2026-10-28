@@ -7,169 +7,276 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body data-theme="dark">
-  <!-- 1. Header (48px fixed) -->
-  <header class="header">
-    <div class="brand">
+  <!-- 1. Header (Unified Brand & Active Context) -->
+  <header class="app-header">
+    <div class="brand-group">
       <div class="brand-logo" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none">
-          <rect x="3" y="3" width="11" height="11" rx="3" stroke="currentColor" stroke-width="2" />
-          <rect x="9" y="9" width="12" height="12" rx="3" fill="currentColor" />
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+          <rect x="3" y="3" width="11" height="11" rx="3" stroke="currentColor" stroke-width="2.2" />
+          <rect x="10" y="10" width="11" height="11" rx="3" fill="currentColor" />
         </svg>
       </div>
-      <span class="brand-name">Session-Swap</span>
+      <div class="brand-info">
+        <span class="brand-title">Session-Swap</span>
+        <span class="brand-version">v1.2.0</span>
+      </div>
     </div>
 
-    <div class="header-actions">
-      <!-- Theme Switcher -->
-      <button id="themeToggleBtn" class="icon-btn" aria-label="Toggle theme" title="Toggle theme">
-        <svg id="themeIconSun" style="display:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
-        <svg id="themeIconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
-      </button>
-
-      <!-- Overflow Menu Trigger -->
-      <button id="overflowMenuBtn" class="icon-btn" aria-label="More options" title="More options" aria-haspopup="true" aria-expanded="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-      </button>
+    <!-- Active Domain Badge in Header -->
+    <div class="domain-pill" id="domainPill" title="Active Website Domain">
+      <div class="status-indicator" id="statusDot"></div>
+      <svg class="domain-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+      <span class="domain-name" id="activeDomainDisplay">Detecting domain...</span>
     </div>
 
-    <!-- Overflow Dropdown Menu -->
-    <div id="overflowMenu" class="overflow-menu" role="menu">
-      <button id="menuItemExport" class="menu-item" role="menuitem">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        Export profiles…
+    <!-- Header Tools -->
+    <div class="header-tools">
+      <button id="dataHubBtn" class="tool-btn" title="Export & Import Backup" aria-label="Export and import backup">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Backup / Sync</span>
       </button>
-      <button id="menuItemImport" class="menu-item" role="menuitem">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-        Import profiles…
-      </button>
-      <button id="menuItemBackup" class="menu-item" role="menuitem">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-        Full database backup…
+
+      <button id="themeToggleBtn" class="icon-tool-btn" title="Toggle Light / Dark Mode" aria-label="Toggle theme">
+        <svg id="themeIconSun" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+        <svg id="themeIconMoon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
       </button>
     </div>
   </header>
 
-  <!-- 2. Context Bar (Active Domain) -->
-  <div class="context-bar">
-    <div class="context-left">
-      <svg class="context-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-      <span class="domain-display" id="activeDomainDisplay">Detecting domain…</span>
-    </div>
-    <div class="context-right">
-      <div id="statusDot" class="status-dot"></div>
-      <span id="statusText" class="status-text">No active session</span>
-    </div>
-  </div>
+  <!-- 2. Primary Action Bar -->
+  <section class="action-banner">
+    <button id="saveSessionBtn" class="primary-action-btn" title="Save current session snapshot">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+        <polyline points="7 3 7 8 15 8"></polyline>
+      </svg>
+      <span>+ Save Current Session</span>
+    </button>
 
-  <!-- 3. Toolbar -->
-  <div class="toolbar">
-    <!-- Action Row -->
-    <div class="toolbar-actions">
-      <button id="saveSessionBtn" class="btn btn-primary" title="Save current session (Ctrl+S)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-        <span>Save current session</span>
-      </button>
-      <button id="newBlankBtn" class="btn btn-ghost" title="Reset to clean guest state">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        <span>New blank</span>
-      </button>
+    <button id="newBlankBtn" class="secondary-action-btn" title="Clear cookies and storage for a clean guest session">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 6h18"></path>
+        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+      </svg>
+      <span>Clean Guest Session</span>
+    </button>
+  </section>
+
+  <!-- 3. Search & Filter Bar -->
+  <section class="filter-section">
+    <div class="search-box">
+      <svg class="search-glyph" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="searchInput" class="search-field" placeholder="Search sessions by name or tag..." autocomplete="off" />
+      <button id="clearSearchBtn" class="clear-search-btn" style="display:none;" title="Clear search">✕</button>
+      <kbd class="shortcut-pill" id="searchKbd">/</kbd>
     </div>
 
-    <!-- Search Row -->
-    <div class="search-row">
-      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" id="searchInput" class="search-input" placeholder="Search profiles or tags" autocomplete="off" />
-      <kbd class="search-kbd" id="searchKbd">/</kbd>
+    <!-- Dynamic Tag Filter Chips -->
+    <div class="tag-chip-row" id="tagChipsRow">
+      <button class="filter-pill active" data-tag="ALL">All Sessions</button>
     </div>
+  </section>
 
-    <!-- Filter Tag Chips -->
-    <div class="tag-chips" id="tagChipsRow">
-      <button class="chip active" data-tag="ALL">All</button>
-    </div>
-  </div>
-
-  <!-- 4. Profile List (Scroll Area) -->
-  <main class="profile-list" id="profileListContainer" role="listbox" aria-label="Saved profiles">
+  <!-- 4. Session Cards Area (Scrollable) -->
+  <main class="sessions-scroll" id="profileListContainer">
+    <!-- Populated by JavaScript -->
     <div class="empty-state">
-      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-      <div class="empty-title">No profiles for this domain yet</div>
-      <div class="empty-desc">Save your current session to switch back to it later.</div>
-      <button id="emptySaveBtn" class="btn btn-primary" style="height: 32px; padding: 0 16px;">Save current session</button>
+      <div class="empty-icon-wrap">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="3"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+      </div>
+      <h3 class="empty-title">No saved sessions yet</h3>
+      <p class="empty-subtitle">Save your current login session to switch between multiple accounts easily.</p>
+      <button id="emptySaveBtn" class="primary-action-btn" style="width: auto; padding: 0 20px; height: 38px;">
+        + Save Current Session
+      </button>
     </div>
   </main>
 
-  <!-- 5. Footer (28px fixed) -->
-  <footer class="footer">
-    <span id="profileCountText">0 profiles</span>
-    <span class="footer-hint"><code>/</code> search · <code>↑↓</code> navigate · <code>↵</code> switch</span>
+  <!-- 5. Footer -->
+  <footer class="app-footer">
+    <span class="footer-count" id="profileCountText">0 sessions stored</span>
+    <span class="footer-brand">Session-Swap &copy; 2026 Somaylab</span>
   </footer>
 
-  <!-- Save Modal Sheet -->
-  <div id="saveModal" class="modal-overlay">
-    <div class="modal-card">
-      <div class="modal-header">
-        <span class="modal-title">Save current session</span>
-        <button class="icon-btn" data-close="saveModal" aria-label="Close dialog">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
+  <!-- Save Modal Dialog -->
+  <div id="saveModal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-dialog-header">
+        <div class="modal-title-wrap">
+          <h3 class="modal-heading">Save Current Session</h3>
+          <p class="modal-subheading">Snapshot cookies, localStorage, and sessionStorage for this domain.</p>
+        </div>
+        <button class="modal-close-btn" data-close="saveModal" aria-label="Close dialog">✕</button>
       </div>
-      <div style="display:flex; flex-direction:column; gap:8px;">
-        <label for="saveProfileName" style="font-size:12px; color:var(--text-muted); font-weight:500;">Profile name</label>
-        <input type="text" id="saveProfileName" class="input-field" placeholder="e.g. Work, Admin, Staging" />
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="saveProfileName">Session Name</label>
+          <input type="text" id="saveProfileName" class="form-input" placeholder="e.g. Work Account, Admin, Test 1" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="saveProfileTag">Category Tag (Optional)</label>
+          <input type="text" id="saveProfileTag" class="form-input" placeholder="e.g. Work, Personal, Dev, QA" />
+          <div class="quick-tags">
+            <span class="quick-tag-label">Suggestions:</span>
+            <button type="button" class="quick-tag-chip" data-apply-tag="Work">Work</button>
+            <button type="button" class="quick-tag-chip" data-apply-tag="Personal">Personal</button>
+            <button type="button" class="quick-tag-chip" data-apply-tag="Staging">Staging</button>
+            <button type="button" class="quick-tag-chip" data-apply-tag="Testing">Testing</button>
+          </div>
+        </div>
       </div>
-      <div style="display:flex; flex-direction:column; gap:8px;">
-        <label for="saveProfileTag" style="font-size:12px; color:var(--text-muted); font-weight:500;">Tag (optional)</label>
-        <input type="text" id="saveProfileTag" class="input-field" placeholder="e.g. Work, Personal, QA" />
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" data-close="saveModal">Cancel</button>
-        <button id="confirmSaveBtn" class="btn btn-primary">Save profile</button>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="saveModal">Cancel</button>
+        <button id="confirmSaveBtn" class="btn-confirm-primary">Save Session</button>
       </div>
     </div>
   </div>
 
-  <!-- Export Dialog -->
-  <div id="exportModal" class="modal-overlay">
-    <div class="modal-card">
-      <div class="modal-header">
-        <span class="modal-title" id="exportModalTitle">Export profiles</span>
-        <button class="icon-btn" data-close="exportModal" aria-label="Close dialog">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
+  <!-- Edit Profile Modal Dialog -->
+  <div id="editModal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-dialog-header">
+        <div class="modal-title-wrap">
+          <h3 class="modal-heading">Edit Session Details</h3>
+          <p class="modal-subheading">Update session name and organizational tag.</p>
+        </div>
+        <button class="modal-close-btn" data-close="editModal" aria-label="Close dialog">✕</button>
       </div>
-      <p style="font-size:12px; color:var(--text-muted);">Copy the serialized JSON below or save as a backup file.</p>
-      <textarea id="exportTextarea" class="modal-textarea" readonly></textarea>
-      <div class="modal-footer">
-        <button id="copyExportBtn" class="btn btn-ghost">Copy to clipboard</button>
-        <button id="downloadExportBtn" class="btn btn-primary">Download JSON</button>
+
+      <div class="modal-body">
+        <input type="hidden" id="editSessionId" />
+        <div class="form-group">
+          <label class="form-label" for="editProfileName">Session Name</label>
+          <input type="text" id="editProfileName" class="form-input" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editProfileTag">Category Tag</label>
+          <input type="text" id="editProfileTag" class="form-input" />
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="editModal">Cancel</button>
+        <button id="confirmEditBtn" class="btn-confirm-primary">Save Changes</button>
       </div>
     </div>
   </div>
 
-  <!-- Import Dialog -->
-  <div id="importModal" class="modal-overlay">
-    <div class="modal-card">
-      <div class="modal-header">
-        <span class="modal-title">Import profiles</span>
-        <button class="icon-btn" data-close="importModal" aria-label="Close dialog">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
+  <!-- Unified Data Hub Modal (Export & Import) -->
+  <div id="dataModal" class="modal-backdrop">
+    <div class="modal-dialog modal-wide">
+      <div class="modal-dialog-header">
+        <div class="modal-title-wrap">
+          <h3 class="modal-heading">Backup & Data Portability</h3>
+          <p class="modal-subheading">Export profiles to share or import snapshots across browsers.</p>
+        </div>
+        <button class="modal-close-btn" data-close="dataModal" aria-label="Close dialog">✕</button>
       </div>
-      <p style="font-size:12px; color:var(--text-muted);">Paste session JSON payload or upload a backup file.</p>
-      <textarea id="importTextarea" class="modal-textarea" placeholder="Paste session JSON here…"></textarea>
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <button id="uploadJsonBtn" class="btn btn-ghost" style="height:28px; font-size:12px;">Choose file…</button>
-        <input type="file" id="importFileInput" accept=".json" style="display:none;" />
+
+      <!-- Segmented Tab Switcher -->
+      <div class="modal-tabs">
+        <button id="tabExportBtn" class="modal-tab active">Export Sessions</button>
+        <button id="tabImportBtn" class="modal-tab">Import Sessions</button>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" data-close="importModal">Cancel</button>
-        <button id="confirmImportBtn" class="btn btn-primary">Restore profiles</button>
+
+      <!-- Tab Content: Export -->
+      <div id="exportTabContent" class="tab-pane active">
+        <div class="scope-selector">
+          <label class="scope-option">
+            <input type="radio" name="exportScope" value="domain" checked />
+            <span>Active Domain Only (<strong id="exportScopeDomain">...</strong>)</span>
+          </label>
+          <label class="scope-option">
+            <input type="radio" name="exportScope" value="all" />
+            <span>Full Database Backup (All Domains)</span>
+          </label>
+        </div>
+
+        <textarea id="exportJsonArea" class="code-textarea" readonly spellcheck="false"></textarea>
+
+        <div class="modal-actions">
+          <button id="copyJsonBtn" class="btn-outline">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span id="copyBtnText">Copy to Clipboard</span>
+          </button>
+          <button id="downloadJsonBtn" class="btn-confirm-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Download .json</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Content: Import -->
+      <div id="importTabContent" class="tab-pane">
+        <p class="tab-instructions">Paste JSON payload below, or upload a JSON backup file to restore sessions.</p>
+        
+        <textarea id="importJsonArea" class="code-textarea" placeholder="Paste session JSON here..." spellcheck="false"></textarea>
+
+        <div class="import-file-bar">
+          <button id="chooseFileBtn" class="btn-outline">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            <span>Upload JSON File</span>
+          </button>
+          <input type="file" id="importFileInput" accept=".json" style="display:none;" />
+          <span id="importFileStatus" class="file-status-text">No file chosen</span>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" data-close="dataModal">Cancel</button>
+          <button id="confirmImportBtn" class="btn-confirm-primary">Restore Sessions</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="toast" role="status" aria-live="polite">
+  <!-- Delete Confirmation Modal Dialog -->
+  <div id="deleteModal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-dialog-header">
+        <div class="modal-title-wrap">
+          <h3 class="modal-heading" style="color:var(--danger);">Delete Session</h3>
+          <p class="modal-subheading">This action removes the saved snapshot permanently.</p>
+        </div>
+        <button class="modal-close-btn" data-close="deleteModal" aria-label="Close dialog">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="deleteSessionId" />
+        <p id="deleteConfirmMessage" class="delete-msg">Are you sure you want to delete this session?</p>
+        <p class="delete-hint">Your current active browser cookies and tab storage will not be affected.</p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" data-close="deleteModal">Cancel</button>
+        <button id="confirmDeleteBtn" class="btn-danger">Delete Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Popover -->
+  <div id="toast" class="toast-bubble" role="status" aria-live="polite">
     <span id="toastMessage">Action completed</span>
   </div>
 

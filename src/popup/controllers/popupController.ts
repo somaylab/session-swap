@@ -11,15 +11,15 @@ import {
   formatRelativeTime,
 } from "@shared/utils";
 
-// Deterministic calm desaturated palette for profile avatars
+// Harmonious, distinct avatar palette for clean monograms
 const AVATAR_PALETTE = [
-  { bg: "#2A364F", text: "#93C5FD" }, // Slate Blue
-  { bg: "#2D3B36", text: "#86EFAC" }, // Sage Green
-  { bg: "#3D314A", text: "#D8B4FE" }, // Muted Violet
-  { bg: "#423235", text: "#FDA4AF" }, // Dusty Rose
-  { bg: "#45382A", text: "#FDE047" }, // Warm Amber
-  { bg: "#2B3B42", text: "#67E8F9" }, // Dusty Cyan
-  { bg: "#353839", text: "#CBD5E1" }, // Neutral Slate
+  { bg: "#1E3A8A", text: "#93C5FD" }, // Blue
+  { bg: "#064E3B", text: "#6EE7B7" }, // Emerald
+  { bg: "#4C1D95", text: "#C4B5FD" }, // Violet
+  { bg: "#831843", text: "#F9A8D4" }, // Pink
+  { bg: "#78350F", text: "#FCD34D" }, // Amber
+  { bg: "#134E4A", text: "#5EEAD4" }, // Teal
+  { bg: "#1F2937", text: "#E5E7EB" }, // Slate
 ];
 
 function getAvatarColor(name: string): { bg: string; text: string } {
@@ -42,8 +42,6 @@ export class PopupController {
   private activeTagFilter = "ALL";
   private searchQuery = "";
   private currentTheme: "light" | "dark" = "dark";
-  private activeInlineAction: { type: "rename" | "delete"; sessionId: string } | null = null;
-  private selectedRowIndex: number = -1;
 
   async init(): Promise<void> {
     try {
@@ -60,7 +58,6 @@ export class PopupController {
     if (raw.ss_theme) {
       this.currentTheme = raw.ss_theme === "light" ? "light" : "dark";
     } else {
-      // Respect system preference
       const isSystemLight = window.matchMedia("(prefers-color-scheme: light)").matches;
       this.currentTheme = isSystemLight ? "light" : "dark";
     }
@@ -118,12 +115,15 @@ export class PopupController {
     const domainEl = document.getElementById("activeDomainDisplay");
     if (domainEl) domainEl.textContent = domain || "Unsupported page";
 
+    const scopeDomainEl = document.getElementById("exportScopeDomain");
+    if (scopeDomainEl) scopeDomainEl.textContent = domain || "Active domain";
+
     if (!domain) {
       this.renderUnsupportedHost("This page cannot be managed (internal or local page).");
       return;
     }
 
-    // Enable toolbar buttons
+    // Enable action buttons
     (document.getElementById("saveSessionBtn") as HTMLButtonElement).disabled = false;
     (document.getElementById("newBlankBtn") as HTMLButtonElement).disabled = false;
 
@@ -146,9 +146,7 @@ export class PopupController {
     if (domainEl) domainEl.textContent = reason;
 
     const dot = document.getElementById("statusDot");
-    const text = document.getElementById("statusText");
-    if (dot) dot.className = "status-dot";
-    if (text) text.textContent = "Unavailable";
+    if (dot) dot.className = "status-indicator";
 
     const saveBtn = document.getElementById("saveSessionBtn") as HTMLButtonElement;
     const blankBtn = document.getElementById("newBlankBtn") as HTMLButtonElement;
@@ -159,9 +157,14 @@ export class PopupController {
     if (container) {
       container.innerHTML = `
         <div class="empty-state">
-          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
-          <div class="empty-title">This page cannot be managed</div>
-          <div class="empty-desc">Chrome internal URLs and local filesystem pages do not permit extension storage isolation.</div>
+          <div class="empty-icon-wrap">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+            </svg>
+          </div>
+          <h3 class="empty-title">Cannot Manage This Page</h3>
+          <p class="empty-subtitle">${this.escapeHtml(reason)} Chrome system URLs and local files do not support cookie/storage isolation.</p>
         </div>
       `;
     }
@@ -169,11 +172,10 @@ export class PopupController {
 
   private updateStatusIndicator(): void {
     const dot = document.getElementById("statusDot");
-    const text = document.getElementById("statusText");
     const hasActive = !!this.state.activeSessionId;
-
-    if (dot) dot.className = `status-dot ${hasActive ? "active" : ""}`;
-    if (text) text.textContent = hasActive ? "Session active" : "No active session";
+    if (dot) {
+      dot.className = `status-indicator ${hasActive ? "active" : ""}`;
+    }
   }
 
   private renderTagChips(): void {
@@ -185,12 +187,12 @@ export class PopupController {
       if (s.tag && s.tag.trim()) uniqueTags.add(s.tag.trim());
     });
 
-    row.innerHTML = `<button class="chip ${this.activeTagFilter === "ALL" ? "active" : ""}" data-tag="ALL">All</button>`;
+    row.innerHTML = `<button class="filter-pill ${this.activeTagFilter === "ALL" ? "active" : ""}" data-tag="ALL">All Sessions</button>`;
 
     uniqueTags.forEach((tag) => {
-      const isActive = this.activeTagFilter === tag;
+      const isActive = this.activeTagFilter.toLowerCase() === tag.toLowerCase();
       const chip = document.createElement("button");
-      chip.className = `chip ${isActive ? "active" : ""}`;
+      chip.className = `filter-pill ${isActive ? "active" : ""}`;
       chip.dataset.tag = tag;
       chip.textContent = tag;
       row.appendChild(chip);
@@ -222,34 +224,48 @@ export class PopupController {
 
     const filtered = this.getFilteredSessions();
     if (countEl) {
-      countEl.textContent = `${this.state.sessions.length} ${this.state.sessions.length === 1 ? "profile" : "profiles"}`;
+      const count = this.state.sessions.length;
+      countEl.textContent = `${count} ${count === 1 ? "session" : "sessions"} on ${this.state.currentDomain || "active domain"}`;
     }
 
     if (filtered.length === 0) {
       if (this.searchQuery || this.activeTagFilter !== "ALL") {
         container.innerHTML = `
           <div class="empty-state">
-            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <div class="empty-title">No matching profiles</div>
-            <div class="empty-desc">No saved profiles match your filter "${this.escapeHtml(this.searchQuery || this.activeTagFilter)}".</div>
-            <button id="clearSearchBtn" class="btn btn-ghost" style="height:28px;">Clear filter</button>
+            <div class="empty-icon-wrap">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <h3 class="empty-title">No matching sessions</h3>
+            <p class="empty-subtitle">No sessions match "${this.escapeHtml(this.searchQuery || this.activeTagFilter)}".</p>
+            <button id="resetSearchBtn" class="btn-outline" style="height:32px; font-size:12.5px;">Clear Filter</button>
           </div>
         `;
-        document.getElementById("clearSearchBtn")?.addEventListener("click", () => {
+        document.getElementById("resetSearchBtn")?.addEventListener("click", () => {
           this.searchQuery = "";
           this.activeTagFilter = "ALL";
           const input = document.getElementById("searchInput") as HTMLInputElement;
           if (input) input.value = "";
+          const clearBtn = document.getElementById("clearSearchBtn");
+          if (clearBtn) clearBtn.style.display = "none";
           this.renderTagChips();
           this.renderProfileList();
         });
       } else {
         container.innerHTML = `
           <div class="empty-state">
-            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <div class="empty-title">No profiles for this domain yet</div>
-            <div class="empty-desc">Save your current session to switch back to it later.</div>
-            <button id="emptySaveBtn" class="btn btn-primary" style="height: 32px; padding: 0 16px;">Save current session</button>
+            <div class="empty-icon-wrap">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="16" rx="3"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <h3 class="empty-title">No saved sessions yet</h3>
+            <p class="empty-subtitle">Save your current login session to switch between multiple accounts easily.</p>
+            <button id="emptySaveBtn" class="primary-action-btn" style="width: auto; padding: 0 20px; height: 38px;">
+              + Save Current Session
+            </button>
           </div>
         `;
         document.getElementById("emptySaveBtn")?.addEventListener("click", () => {
@@ -260,158 +276,101 @@ export class PopupController {
     }
 
     container.innerHTML = "";
-    filtered.forEach((session, idx) => {
-      const row = this.createProfileRow(session, idx);
-      container.appendChild(row);
+    filtered.forEach((session) => {
+      const card = this.createProfileCard(session);
+      container.appendChild(card);
     });
   }
 
-  private createProfileRow(session: SessionProfile, index: number): HTMLElement {
-    const row = document.createElement("div");
-    row.className = "profile-row";
-    row.setAttribute("role", "option");
-    row.dataset.id = session.id;
-    row.dataset.index = index.toString();
+  private createProfileCard(session: SessionProfile): HTMLElement {
+    const card = document.createElement("div");
+    card.className = "session-card";
+    card.dataset.id = session.id;
 
     const isActive = session.id === this.state.activeSessionId;
     if (isActive) {
-      row.classList.add("active");
-      row.setAttribute("aria-selected", "true");
+      card.classList.add("active-card");
     }
 
-    // Check if row is currently in inline action state
-    if (this.activeInlineAction?.sessionId === session.id) {
-      if (this.activeInlineAction.type === "rename") {
-        row.innerHTML = `
-          <input type="text" class="inline-edit-input" value="${this.escapeHtml(session.name)}" />
-          <div style="display:flex; gap:4px;">
-            <button class="btn btn-primary btn-xs save-rename-btn">Save</button>
-            <button class="btn btn-ghost btn-xs cancel-btn">Cancel</button>
-          </div>
-        `;
-        const input = row.querySelector(".inline-edit-input") as HTMLInputElement;
-        input?.focus();
-        input?.select();
-
-        const doSave = async () => {
-          const val = input.value.trim();
-          if (val) {
-            await this.sendMessage({
-              action: IPC_ACTIONS.RENAME_SESSION,
-              sessionId: session.id,
-              newName: val,
-              tag: session.tag,
-            });
-            this.showToast("Profile renamed");
-          }
-          this.activeInlineAction = null;
-          await this.refreshState();
-        };
-
-        row.querySelector(".save-rename-btn")?.addEventListener("click", (e) => {
-          e.stopPropagation();
-          doSave();
-        });
-        row.querySelector(".cancel-btn")?.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this.activeInlineAction = null;
-          this.renderProfileList();
-        });
-        input.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") doSave();
-          if (e.key === "Escape") {
-            this.activeInlineAction = null;
-            this.renderProfileList();
-          }
-        });
-        return row;
-      }
-
-      if (this.activeInlineAction.type === "delete") {
-        row.innerHTML = `
-          <div class="inline-confirm-box">
-            <span class="inline-confirm-text">Delete '${this.escapeHtml(session.name)}'?</span>
-            <div class="inline-confirm-btns">
-              <button class="btn btn-ghost btn-xs cancel-btn">Cancel</button>
-              <button class="btn btn-danger btn-xs confirm-delete-btn">Delete</button>
-            </div>
-          </div>
-        `;
-        row.querySelector(".confirm-delete-btn")?.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          await this.sendMessage({
-            action: IPC_ACTIONS.DELETE_SESSION,
-            sessionId: session.id,
-          });
-          this.activeInlineAction = null;
-          this.showToast("Profile deleted");
-          await this.refreshState();
-        });
-        row.querySelector(".cancel-btn")?.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this.activeInlineAction = null;
-          this.renderProfileList();
-        });
-        return row;
-      }
-    }
-
-    // Default Normal Row
     const avatar = getAvatarColor(session.name);
-    const initial = (session.name.charAt(0) || "P").toUpperCase();
+    const initial = (session.name.charAt(0) || "S").toUpperCase();
     const cookieCount = session.cookies?.length || 0;
+    const localCount = session.storage?.localStorage ? Object.keys(session.storage.localStorage).length : 0;
+    const sessionCount = session.storage?.sessionStorage ? Object.keys(session.storage.sessionStorage).length : 0;
+    const storageCount = localCount + sessionCount;
     const timeText = formatRelativeTime(session.lastUsed);
 
-    row.innerHTML = `
-      <div class="avatar" style="background-color: ${avatar.bg}; color: ${avatar.text};">
-        ${this.escapeHtml(initial)}
+    card.innerHTML = `
+      <div class="card-left">
+        <div class="avatar-badge" style="background-color: ${avatar.bg}; color: ${avatar.text};">
+          ${this.escapeHtml(initial)}
+        </div>
+        <div class="card-info">
+          <div class="card-heading-row">
+            <span class="card-name" title="${this.escapeHtml(session.name)}">${this.escapeHtml(session.name)}</span>
+            ${session.tag ? `<span class="card-tag">${this.escapeHtml(session.tag)}</span>` : ""}
+            ${isActive ? `<span class="active-pill">● ACTIVE</span>` : ""}
+          </div>
+          <div class="card-metadata">
+            <span>Saved ${timeText} · ${cookieCount} cookies · ${storageCount} storages</span>
+          </div>
+        </div>
       </div>
 
-      <div class="profile-details">
-        <div class="profile-line-1">
-          <span class="profile-name" title="${this.escapeHtml(session.name)}">${this.escapeHtml(session.name)}</span>
-          ${session.tag ? `<span class="profile-tag-pill">${this.escapeHtml(session.tag)}</span>` : ""}
-        </div>
-        <div class="profile-line-2">
-          <span>Saved ${timeText} · ${cookieCount} cookies</span>
-        </div>
-      </div>
+      <div class="card-actions">
+        ${
+          isActive
+            ? `<div class="in-use-badge" title="This profile is currently active in your tab">✓ In Use</div>`
+            : `<button class="switch-btn switch-action" title="Switch to this profile and reload tab">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="17 1 21 5 17 9"></polyline>
+                  <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                  <polyline points="7 23 3 19 7 15"></polyline>
+                  <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                </svg>
+                <span>Switch</span>
+              </button>`
+        }
 
-      <div class="row-actions">
-        <button class="row-btn edit-btn" aria-label="Rename profile" title="Rename (F2)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+        <button class="card-icon-btn edit-action" title="Edit session name and tag">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+          </svg>
         </button>
-        <button class="row-btn delete-btn" aria-label="Delete profile" title="Delete">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+
+        <button class="card-icon-btn danger-btn delete-action" title="Delete session">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
         </button>
       </div>
     `;
 
-    // Row Click = Switch session
-    row.addEventListener("click", () => {
+    // Switch action
+    card.querySelector(".switch-action")?.addEventListener("click", (e) => {
+      e.stopPropagation();
       this.handleSwitchSession(session);
     });
 
-    // Rename Button Click
-    row.querySelector(".edit-btn")?.addEventListener("click", (e) => {
+    // Edit action
+    card.querySelector(".edit-action")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      this.activeInlineAction = { type: "rename", sessionId: session.id };
-      this.renderProfileList();
+      this.openEditModal(session);
     });
 
-    // Delete Button Click
-    row.querySelector(".delete-btn")?.addEventListener("click", (e) => {
+    // Delete action
+    card.querySelector(".delete-action")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      this.activeInlineAction = { type: "delete", sessionId: session.id };
-      this.renderProfileList();
+      this.openDeleteModal(session);
     });
 
-    return row;
+    return card;
   }
 
   private async handleSwitchSession(session: SessionProfile): Promise<void> {
     try {
-      this.showToast(`Switched to "${session.name}"`);
+      this.showToast(`Restoring "${session.name}"...`);
       await this.sendMessage({
         action: IPC_ACTIONS.APPLY_SESSION,
         sessionId: session.id,
@@ -425,7 +384,7 @@ export class PopupController {
 
   private async handleNewBlank(): Promise<void> {
     try {
-      this.showToast("Cleared session state");
+      this.showToast("Cleared active session state");
       await this.sendMessage({
         action: IPC_ACTIONS.CLEAR_SESSION,
         domain: this.state.currentDomain,
@@ -437,6 +396,7 @@ export class PopupController {
     }
   }
 
+  // Save Modal
   private openSaveModal(): void {
     const input = document.getElementById("saveProfileName") as HTMLInputElement;
     const tag = document.getElementById("saveProfileTag") as HTMLInputElement;
@@ -453,7 +413,7 @@ export class PopupController {
   private async handleConfirmSave(): Promise<void> {
     const input = document.getElementById("saveProfileName") as HTMLInputElement;
     const tag = document.getElementById("saveProfileTag") as HTMLInputElement;
-    const name = input?.value.trim() || "Unnamed profile";
+    const name = input?.value.trim() || "Unnamed session";
     const tagVal = tag?.value.trim();
 
     try {
@@ -465,154 +425,93 @@ export class PopupController {
         name,
         tag: tagVal || undefined,
       });
-      this.showToast("Session saved");
+      this.showToast("Session snapshot saved!");
       await this.refreshState();
     } catch (err) {
       this.showToast(`Save failed: ${(err as Error).message}`);
     }
   }
 
-  // Global listeners & keyboard navigation
-  private setupGlobalEvents(): void {
-    // Theme toggle
-    document.getElementById("themeToggleBtn")?.addEventListener("click", () => {
-      this.toggleTheme();
-    });
+  // Edit Modal
+  private openEditModal(session: SessionProfile): void {
+    const idInput = document.getElementById("editSessionId") as HTMLInputElement;
+    const nameInput = document.getElementById("editProfileName") as HTMLInputElement;
+    const tagInput = document.getElementById("editProfileTag") as HTMLInputElement;
 
-    // Overflow Menu Toggle
-    const menuBtn = document.getElementById("overflowMenuBtn");
-    const menu = document.getElementById("overflowMenu");
-    menuBtn?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const isOpen = menu?.classList.contains("open");
-      if (isOpen) {
-        menu?.classList.remove("open");
-        menuBtn.setAttribute("aria-expanded", "false");
-      } else {
-        menu?.classList.add("open");
-        menuBtn.setAttribute("aria-expanded", "true");
-      }
-    });
+    if (idInput) idInput.value = session.id;
+    if (nameInput) nameInput.value = session.name;
+    if (tagInput) tagInput.value = session.tag || "";
 
-    document.addEventListener("click", () => {
-      menu?.classList.remove("open");
-      menuBtn?.setAttribute("aria-expanded", "false");
-    });
+    document.getElementById("editModal")?.classList.add("open");
+    nameInput?.focus();
+    nameInput?.select();
+  }
 
-    // Save & New blank
-    document.getElementById("saveSessionBtn")?.addEventListener("click", () => {
-      this.openSaveModal();
-    });
-    document.getElementById("newBlankBtn")?.addEventListener("click", () => {
-      this.handleNewBlank();
-    });
-    document.getElementById("confirmSaveBtn")?.addEventListener("click", () => {
-      this.handleConfirmSave();
-    });
+  private async handleConfirmEdit(): Promise<void> {
+    const idInput = document.getElementById("editSessionId") as HTMLInputElement;
+    const nameInput = document.getElementById("editProfileName") as HTMLInputElement;
+    const tagInput = document.getElementById("editProfileTag") as HTMLInputElement;
 
-    // Modal close triggers
-    document.querySelectorAll("[data-close]").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const id = (e.currentTarget as HTMLElement).dataset.close;
-        if (id) document.getElementById(id)?.classList.remove("open");
+    const id = idInput?.value;
+    const newName = nameInput?.value.trim();
+    const tag = tagInput?.value.trim();
+
+    if (!id || !newName) return;
+
+    try {
+      document.getElementById("editModal")?.classList.remove("open");
+      await this.sendMessage({
+        action: IPC_ACTIONS.RENAME_SESSION,
+        sessionId: id,
+        newName,
+        tag: tag || undefined,
       });
-    });
-
-    // Search and '/' hotkey
-    const searchInput = document.getElementById("searchInput") as HTMLInputElement;
-    const searchKbd = document.getElementById("searchKbd");
-
-    searchInput?.addEventListener("input", (e) => {
-      this.searchQuery = (e.target as HTMLInputElement).value.toLowerCase();
-      if (searchKbd) searchKbd.style.display = this.searchQuery ? "none" : "block";
-      this.renderProfileList();
-    });
-
-    // Tag chip clicks
-    document.getElementById("tagChipsRow")?.addEventListener("click", (e) => {
-      const chip = (e.target as HTMLElement).closest(".chip") as HTMLElement;
-      if (!chip) return;
-      document.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
-      chip.classList.add("active");
-      this.activeTagFilter = chip.dataset.tag || "ALL";
-      this.renderProfileList();
-    });
-
-    // Overflow Menu Item: Export profiles
-    document.getElementById("menuItemExport")?.addEventListener("click", async () => {
-      menu?.classList.remove("open");
-      await this.openExportModal("domain");
-    });
-
-    // Overflow Menu Item: Full database backup
-    document.getElementById("menuItemBackup")?.addEventListener("click", async () => {
-      menu?.classList.remove("open");
-      await this.openExportModal("all");
-    });
-
-    // Overflow Menu Item: Import profiles
-    document.getElementById("menuItemImport")?.addEventListener("click", () => {
-      menu?.classList.remove("open");
-      this.openImportModal();
-    });
-
-    // Export Dialog Actions
-    document.getElementById("copyExportBtn")?.addEventListener("click", () => {
-      this.handleCopyExport();
-    });
-    document.getElementById("downloadExportBtn")?.addEventListener("click", () => {
-      this.handleDownloadExport();
-    });
-
-    // Import Dialog Actions
-    document.getElementById("uploadJsonBtn")?.addEventListener("click", () => {
-      document.getElementById("importFileInput")?.click();
-    });
-    document.getElementById("importFileInput")?.addEventListener("change", (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const txt = document.getElementById("importTextarea") as HTMLTextAreaElement;
-          if (txt) txt.value = ev.target?.result as string;
-        };
-        reader.readAsText(file);
-      }
-    });
-    document.getElementById("confirmImportBtn")?.addEventListener("click", () => {
-      this.handleExecuteImport();
-    });
-
-    // Keyboard Shortcuts: '/', Escape, Enter
-    document.addEventListener("keydown", (e) => {
-      // Focus search on '/'
-      if (e.key === "/" && document.activeElement !== searchInput && !this.isAnyModalOpen()) {
-        e.preventDefault();
-        searchInput?.focus();
-        return;
-      }
-
-      // Close modals or inline actions on Escape
-      if (e.key === "Escape") {
-        menu?.classList.remove("open");
-        document.querySelectorAll(".modal-overlay").forEach((m) => m.classList.remove("open"));
-        if (this.activeInlineAction) {
-          this.activeInlineAction = null;
-          this.renderProfileList();
-        }
-      }
-    });
+      this.showToast("Profile updated");
+      await this.refreshState();
+    } catch (err) {
+      this.showToast(`Update error: ${(err as Error).message}`);
+    }
   }
 
-  private isAnyModalOpen(): boolean {
-    return document.querySelectorAll(".modal-overlay.open").length > 0;
+  // Delete Modal
+  private openDeleteModal(session: SessionProfile): void {
+    const idInput = document.getElementById("deleteSessionId") as HTMLInputElement;
+    const msg = document.getElementById("deleteConfirmMessage");
+
+    if (idInput) idInput.value = session.id;
+    if (msg) msg.textContent = `Are you sure you want to delete "${session.name}"?`;
+
+    document.getElementById("deleteModal")?.classList.add("open");
   }
 
-  // Export handlers
-  private async openExportModal(scope: "domain" | "all"): Promise<void> {
-    const title = document.getElementById("exportModalTitle");
-    const textarea = document.getElementById("exportTextarea") as HTMLTextAreaElement;
-    if (title) title.textContent = scope === "domain" ? "Export profiles" : "Full database backup";
+  private async handleConfirmDelete(): Promise<void> {
+    const idInput = document.getElementById("deleteSessionId") as HTMLInputElement;
+    const id = idInput?.value;
+    if (!id) return;
+
+    try {
+      document.getElementById("deleteModal")?.classList.remove("open");
+      await this.sendMessage({
+        action: IPC_ACTIONS.DELETE_SESSION,
+        sessionId: id,
+      });
+      this.showToast("Session profile removed");
+      await this.refreshState();
+    } catch (err) {
+      this.showToast(`Delete failed: ${(err as Error).message}`);
+    }
+  }
+
+  // Unified Data Hub (Export & Import)
+  private async openDataModal(): Promise<void> {
+    document.getElementById("dataModal")?.classList.add("open");
+    await this.updateExportJson();
+  }
+
+  private async updateExportJson(): Promise<void> {
+    const radio = document.querySelector('input[name="exportScope"]:checked') as HTMLInputElement;
+    const scope = radio ? radio.value : "domain";
+    const textarea = document.getElementById("exportJsonArea") as HTMLTextAreaElement;
 
     let payload: unknown;
     if (scope === "domain") {
@@ -627,51 +526,47 @@ export class PopupController {
     }
 
     if (textarea) textarea.value = JSON.stringify(payload, null, 2);
-    document.getElementById("exportModal")?.classList.add("open");
-    textarea?.select();
   }
 
   private async handleCopyExport(): Promise<void> {
-    const textarea = document.getElementById("exportTextarea") as HTMLTextAreaElement;
+    const textarea = document.getElementById("exportJsonArea") as HTMLTextAreaElement;
     if (!textarea || !textarea.value) return;
 
     await navigator.clipboard.writeText(textarea.value);
-    const btn = document.getElementById("copyExportBtn");
-    if (btn) {
-      btn.textContent = "Copied!";
+    const copyText = document.getElementById("copyBtnText");
+    if (copyText) {
+      copyText.textContent = "Copied to Clipboard!";
       setTimeout(() => {
-        btn.textContent = "Copy to clipboard";
+        copyText.textContent = "Copy to Clipboard";
       }, 2000);
     }
-    this.showToast("Copied to clipboard");
+    this.showToast("JSON payload copied to clipboard");
   }
 
   private handleDownloadExport(): void {
-    const textarea = document.getElementById("exportTextarea") as HTMLTextAreaElement;
+    const textarea = document.getElementById("exportJsonArea") as HTMLTextAreaElement;
     if (!textarea || !textarea.value) return;
+
+    const radio = document.querySelector('input[name="exportScope"]:checked') as HTMLInputElement;
+    const scope = radio ? radio.value : "domain";
 
     const blob = new Blob([textarea.value], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `session-swap-${this.state.currentDomain || "all"}-${Date.now()}.json`;
+    a.download = `session-swap-${scope === "domain" ? this.state.currentDomain : "backup"}-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    this.showToast("Exported JSON file");
-  }
-
-  // Import handler
-  private openImportModal(): void {
-    const textarea = document.getElementById("importTextarea") as HTMLTextAreaElement;
-    if (textarea) textarea.value = "";
-    document.getElementById("importModal")?.classList.add("open");
-    textarea?.focus();
+    this.showToast("Export file downloaded");
   }
 
   private async handleExecuteImport(): Promise<void> {
-    const textarea = document.getElementById("importTextarea") as HTMLTextAreaElement;
+    const textarea = document.getElementById("importJsonArea") as HTMLTextAreaElement;
     const raw = textarea?.value.trim();
-    if (!raw) return;
+    if (!raw) {
+      this.showToast("Please paste JSON payload first");
+      return;
+    }
 
     try {
       const parsed = JSON.parse(raw);
@@ -680,8 +575,8 @@ export class PopupController {
           action: IPC_ACTIONS.IMPORT_SESSIONS,
           importedProfiles: parsed,
         });
-        document.getElementById("importModal")?.classList.remove("open");
-        this.showToast(`Imported ${res.count} profiles`);
+        document.getElementById("dataModal")?.classList.remove("open");
+        this.showToast(`Successfully imported ${res.count} profiles`);
         await this.refreshState();
         return;
       }
@@ -692,16 +587,176 @@ export class PopupController {
           backupPayload: parsed,
           overwrite: false,
         });
-        document.getElementById("importModal")?.classList.remove("open");
-        this.showToast(`Restored ${res.restoredSessions} profiles`);
+        document.getElementById("dataModal")?.classList.remove("open");
+        this.showToast(`Restored ${res.restoredSessions} sessions across all domains`);
         await this.refreshState();
         return;
       }
 
-      throw new Error("Invalid session JSON structure.");
+      throw new Error("Unrecognized session format. Expected SessionProfile[] or full backup schema.");
     } catch (err) {
       this.showToast(`Import error: ${(err as Error).message}`);
     }
+  }
+
+  // Setup Global Listeners
+  private setupGlobalEvents(): void {
+    // Theme toggle
+    document.getElementById("themeToggleBtn")?.addEventListener("click", () => {
+      this.toggleTheme();
+    });
+
+    // Data Hub (Backup/Sync)
+    document.getElementById("dataHubBtn")?.addEventListener("click", () => {
+      this.openDataModal();
+    });
+
+    // Save & Blank buttons
+    document.getElementById("saveSessionBtn")?.addEventListener("click", () => {
+      this.openSaveModal();
+    });
+    document.getElementById("newBlankBtn")?.addEventListener("click", () => {
+      this.handleNewBlank();
+    });
+
+    // Save dialog events
+    document.getElementById("confirmSaveBtn")?.addEventListener("click", () => {
+      this.handleConfirmSave();
+    });
+    document.querySelectorAll(".quick-tag-chip").forEach((chip) => {
+      chip.addEventListener("click", (e) => {
+        const tag = (e.currentTarget as HTMLElement).dataset.applyTag;
+        const tagInput = document.getElementById("saveProfileTag") as HTMLInputElement;
+        if (tag && tagInput) tagInput.value = tag;
+      });
+    });
+
+    // Edit dialog events
+    document.getElementById("confirmEditBtn")?.addEventListener("click", () => {
+      this.handleConfirmEdit();
+    });
+
+    // Delete dialog events
+    document.getElementById("confirmDeleteBtn")?.addEventListener("click", () => {
+      this.handleConfirmDelete();
+    });
+
+    // Modal close triggers
+    document.querySelectorAll("[data-close]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const id = (e.currentTarget as HTMLElement).dataset.close;
+        if (id) document.getElementById(id)?.classList.remove("open");
+      });
+    });
+
+    // Search input
+    const searchInput = document.getElementById("searchInput") as HTMLInputElement;
+    const clearSearchBtn = document.getElementById("clearSearchBtn");
+    const searchKbd = document.getElementById("searchKbd");
+
+    searchInput?.addEventListener("input", (e) => {
+      this.searchQuery = (e.target as HTMLInputElement).value.toLowerCase();
+      if (clearSearchBtn) clearSearchBtn.style.display = this.searchQuery ? "block" : "none";
+      if (searchKbd) searchKbd.style.display = this.searchQuery ? "none" : "block";
+      this.renderProfileList();
+    });
+
+    clearSearchBtn?.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "";
+      this.searchQuery = "";
+      clearSearchBtn.style.display = "none";
+      if (searchKbd) searchKbd.style.display = "block";
+      this.renderProfileList();
+    });
+
+    // Tag chip clicks
+    document.getElementById("tagChipsRow")?.addEventListener("click", (e) => {
+      const pill = (e.target as HTMLElement).closest(".filter-pill") as HTMLElement;
+      if (!pill) return;
+      document.querySelectorAll(".filter-pill").forEach((c) => c.classList.remove("active"));
+      pill.classList.add("active");
+      this.activeTagFilter = pill.dataset.tag || "ALL";
+      this.renderProfileList();
+    });
+
+    // Data Modal: Tabs
+    const tabExport = document.getElementById("tabExportBtn");
+    const tabImport = document.getElementById("tabImportBtn");
+    const paneExport = document.getElementById("exportTabContent");
+    const paneImport = document.getElementById("importTabContent");
+
+    tabExport?.addEventListener("click", () => {
+      tabExport.classList.add("active");
+      tabImport?.classList.remove("active");
+      paneExport?.classList.add("active");
+      paneImport?.classList.remove("active");
+      this.updateExportJson();
+    });
+
+    tabImport?.addEventListener("click", () => {
+      tabImport.classList.add("active");
+      tabExport?.classList.remove("active");
+      paneImport?.classList.add("active");
+      paneExport?.classList.remove("active");
+    });
+
+    // Scope Radio change
+    document.querySelectorAll('input[name="exportScope"]').forEach((radio) => {
+      radio.addEventListener("change", () => {
+        this.updateExportJson();
+      });
+    });
+
+    // Copy & Download Export
+    document.getElementById("copyJsonBtn")?.addEventListener("click", () => {
+      this.handleCopyExport();
+    });
+    document.getElementById("downloadJsonBtn")?.addEventListener("click", () => {
+      this.handleDownloadExport();
+    });
+
+    // File Upload for Import
+    const fileInput = document.getElementById("importFileInput") as HTMLInputElement;
+    const chooseFileBtn = document.getElementById("chooseFileBtn");
+    const fileStatus = document.getElementById("importFileStatus");
+
+    chooseFileBtn?.addEventListener("click", () => {
+      fileInput?.click();
+    });
+
+    fileInput?.addEventListener("change", (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        if (fileStatus) fileStatus.textContent = file.name;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const area = document.getElementById("importJsonArea") as HTMLTextAreaElement;
+          if (area) area.value = ev.target?.result as string;
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    document.getElementById("confirmImportBtn")?.addEventListener("click", () => {
+      this.handleExecuteImport();
+    });
+
+    // Global Keydown shortcuts: Escape, '/'
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "/" && document.activeElement !== searchInput && !this.isAnyModalOpen()) {
+        e.preventDefault();
+        searchInput?.focus();
+        return;
+      }
+
+      if (e.key === "Escape") {
+        document.querySelectorAll(".modal-backdrop").forEach((m) => m.classList.remove("open"));
+      }
+    });
+  }
+
+  private isAnyModalOpen(): boolean {
+    return document.querySelectorAll(".modal-backdrop.open").length > 0;
   }
 
   private showToast(msg: string): void {

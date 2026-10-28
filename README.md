@@ -17,30 +17,29 @@ session-swap provides client-side state containerization directly within the bro
 
 ### User Interface Wireframe
 
-The interface adheres to a 420x580 fixed dimension layout with structured visual hierarchy:
+The interface adheres to an expansive 540x600 layout engineered for high readability, crisp typography, and comfortable click targets:
 
 ```
-+---------------------------------------------------------------------+
-| [Mark] Session-Swap                                [Theme] [More v] |  Header (48px)
-+---------------------------------------------------------------------+
-| [Globe] chatgpt.com                             [o] Session active  |  Context Bar
-+---------------------------------------------------------------------+
-| [ Save current session ]  [ New blank ]                             |  Toolbar Actions
-| [Search profiles or tags                                     ]  [/] |  Search Input
-| [All]  [Work]  [Personal]  [Staging]                                |  Tag Filter Chips
-+---------------------------------------------------------------------+
-|                                                                     |
-|  +----+  Work Profile  [Work]                                       |
-|  | W  |  Saved 2m ago · 14 cookies                      [Edit] [Del]|  Profile Row (56px)
-|  +----+                                                             |
-|---------------------------------------------------------------------|
-|  +----+  Personal Account  [Personal]                               |
-|  | P  |  Saved 1h ago · 8 cookies                       [Edit] [Del]|  Profile Row (56px)
-|  +----+                                                             |
-|                                                                     |
-+---------------------------------------------------------------------+
-| 2 profiles                             / search · ↑↓ nav · ↵ switch |  Footer (28px)
-+---------------------------------------------------------------------+
++---------------------------------------------------------------------------------------+
+| [Mark] Session-Swap  v1.2.0    [ (o) chatgpt.com ]        [ Backup/Sync ] [ Theme ]   |  Header (56px)
++---------------------------------------------------------------------------------------+
+| [ + Save Current Session ]               [ Clean Guest Session ]                      |  Action Banner
++---------------------------------------------------------------------------------------+
+| [ Q Search sessions by name or tag...                                             /]  |  Search Input
+| [All Sessions]  [Work]  [Personal]  [Staging]                                         |  Tag Filter Chips
++---------------------------------------------------------------------------------------+
+|                                                                                       |
+|  +----+  Work Account  [Work]  [● ACTIVE]                                             |
+|  | W  |  Saved 2m ago · 14 cookies · 2 storages             [✓ In Use] [Edit] [Del]   |  Active Card
+|  +----+                                                                               |
+|                                                                                       |
+|  +----+  Personal Account  [Personal]                                                 |
+|  | P  |  Saved 1h ago · 8 cookies · 1 storage               [ Switch ] [Edit] [Del]   |  Saved Card
+|  +----+                                                                               |
+|                                                                                       |
++---------------------------------------------------------------------------------------+
+| 2 sessions stored on chatgpt.com                          Session-Swap © 2026 Somaylab|  Footer (32px)
++---------------------------------------------------------------------------------------+
 ```
 
 ---
