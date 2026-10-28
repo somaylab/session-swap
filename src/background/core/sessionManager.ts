@@ -164,6 +164,62 @@ export class SessionManager {
     return store.sessions;
   }
 
+  async backupAll(): Promise<StorageSchema & { exportedAt: number; version: string }> {
+    const store = await this.getStorageData();
+    return {
+      version: "1.1.0",
+      exportedAt: Date.now(),
+      sessions: store.sessions,
+      activeSessions: store.activeSessions,
+    };
+  }
+
+  async restoreAll(
+    backupPayload: Partial<StorageSchema>,
+    overwrite: boolean = false
+  ): Promise<{ restoredSessions: number; restoredDomains: number }> {
+    const incomingSessions = Array.isArray(backupPayload.sessions) ? backupPayload.sessions : [];
+    const incomingActive = backupPayload.activeSessions || {};
+
+    const store = await this.getStorageData();
+    let currentSessions = overwrite ? [] : [...store.sessions];
+    let currentActive = overwrite ? {} : { ...store.activeSessions };
+    const domainSet = new Set<string>();
+
+    let count = 0;
+    for (const item of incomingSessions) {
+      if (!item.name || !item.domain || !Array.isArray(item.cookies)) continue;
+
+      const profile: SessionProfile = {
+        ...item,
+        id: generateSessionId(),
+        createdAt: item.createdAt || Date.now(),
+        lastUsed: Date.now(),
+        order: currentSessions.filter((s) => s.domain === item.domain).length,
+      };
+
+      currentSessions.push(profile);
+      domainSet.add(profile.domain);
+      count++;
+    }
+
+    // Merge active map safely
+    Object.entries(incomingActive).forEach(([dom, _sid]) => {
+      // Find matching session in newly restored list
+      const match = currentSessions.find((s) => s.domain === dom);
+      if (match) {
+        currentActive[dom] = match.id;
+      }
+    });
+
+    await this.setStorageData({
+      sessions: currentSessions,
+      activeSessions: currentActive,
+    });
+
+    return { restoredSessions: count, restoredDomains: domainSet.size };
+  }
+
   async importSessions(incoming: SessionProfile[]): Promise<number> {
     if (!Array.isArray(incoming)) {
       throw new Error("Invalid session backup format");

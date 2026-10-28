@@ -82,11 +82,29 @@ export function formatRelativeTime(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString();
 }
 
-export const TAG_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Work: { bg: "#FFE500", text: "#000000", border: "#000000" },
-  Personal: { bg: "#00F0FF", text: "#000000", border: "#000000" },
-  Admin: { bg: "#FF0055", text: "#FFFFFF", border: "#000000" },
-  QA: { bg: "#00FF66", text: "#000000", border: "#000000" },
-  Bot: { bg: "#B026FF", text: "#FFFFFF", border: "#000000" },
-  Default: { bg: "#E5E5E5", text: "#000000", border: "#000000" },
-};
+const PALETTE = [
+  { bg: "#fef08a", text: "#713f12", border: "#eab308" }, // Amber/Yellow
+  { bg: "#bae6fd", text: "#0369a1", border: "#0284c7" }, // Sky/Cyan
+  { bg: "#a7f3d0", text: "#065f46", border: "#10b981" }, // Emerald
+  { bg: "#ddd6fe", text: "#5b21b6", border: "#8b5cf6" }, // Violet
+  { bg: "#fbcfe8", text: "#9d174d", border: "#ec4899" }, // Pink
+  { bg: "#fed7aa", text: "#9a3412", border: "#f97316" }, // Orange
+  { bg: "#99f6e4", text: "#115e59", border: "#14b8a6" }, // Teal
+  { bg: "#c7d2fe", text: "#3730a3", border: "#6366f1" }, // Indigo
+  { bg: "#d9f99d", text: "#3f6212", border: "#84cc16" }, // Lime
+  { bg: "#f5d0fe", text: "#86198f", border: "#d946ef" }, // Fuchsia
+];
+
+export function getTagColor(tagName: string = "DEFAULT"): { bg: string; text: string; border: string } {
+  const clean = tagName.trim().toUpperCase();
+  if (!clean || clean === "DEFAULT") {
+    return { bg: "#e2e8f0", text: "#334155", border: "#94a3b8" };
+  }
+  let hash = 0;
+  for (let i = 0; i < clean.length; i++) {
+    hash = (hash << 5) - hash + clean.charCodeAt(i);
+    hash |= 0;
+  }
+  const index = Math.abs(hash) % PALETTE.length;
+  return PALETTE[index];
+}

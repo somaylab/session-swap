@@ -48,6 +48,8 @@ export const IPC_ACTIONS = {
   REORDER_SESSIONS: "session_swap:reorder_sessions",
   EXPORT_SESSIONS: "session_swap:export_sessions",
   IMPORT_SESSIONS: "session_swap:import_sessions",
+  BACKUP_ALL: "session_swap:backup_all",
+  RESTORE_ALL: "session_swap:restore_all",
 } as const;
 
 export type IpcActionType = (typeof IPC_ACTIONS)[keyof typeof IPC_ACTIONS];
@@ -110,6 +112,16 @@ export interface IpcImportSessionsMessage extends IpcBaseMessage {
   importedProfiles: SessionProfile[];
 }
 
+export interface IpcBackupAllMessage extends IpcBaseMessage {
+  action: typeof IPC_ACTIONS.BACKUP_ALL;
+}
+
+export interface IpcRestoreAllMessage extends IpcBaseMessage {
+  action: typeof IPC_ACTIONS.RESTORE_ALL;
+  backupPayload: StorageSchema;
+  overwrite: boolean;
+}
+
 export type IpcMessage =
   | IpcGetCurrentStateMessage
   | IpcSaveSessionMessage
@@ -119,7 +131,9 @@ export type IpcMessage =
   | IpcRenameSessionMessage
   | IpcReorderSessionsMessage
   | IpcExportSessionsMessage
-  | IpcImportSessionsMessage;
+  | IpcImportSessionsMessage
+  | IpcBackupAllMessage
+  | IpcRestoreAllMessage;
 
 export interface IpcResponse<T = unknown> {
   success: boolean;

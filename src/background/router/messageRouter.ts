@@ -89,6 +89,17 @@ export class MessageRouter {
         return { count };
       }
 
+      case IPC_ACTIONS.BACKUP_ALL: {
+        return await this.sessionManager.backupAll();
+      }
+
+      case IPC_ACTIONS.RESTORE_ALL: {
+        return await this.sessionManager.restoreAll(
+          message.backupPayload,
+          message.overwrite
+        );
+      }
+
       default:
         throw new Error(`Unknown action: ${(message as { action?: string }).action}`);
     }

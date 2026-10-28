@@ -6,53 +6,72 @@
   <title>session-swap</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body data-theme="dark">
   <!-- Header -->
   <header class="header">
     <div class="brand-row">
-      <div class="brand-title">
-        <span>session-swap</span>
+      <div class="brand-title-wrap">
+        <img src="../assets/icons/icon-32.png" alt="icon" class="brand-icon" />
+        <span class="brand-title">session-swap</span>
         <span class="brand-badge">MV3</span>
       </div>
       <div class="header-tools">
-        <button id="exportBtn" class="icon-btn" title="Export sessions as JSON">EXPORT</button>
-        <button id="importBtn" class="icon-btn" title="Import sessions from JSON">IMPORT</button>
+        <!-- Theme Toggle -->
+        <button id="themeToggleBtn" class="tool-btn theme-toggle-btn" title="Toggle Light/Dark Theme">
+          <svg id="themeIconSun" style="display:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg id="themeIconMoon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <!-- Export & Import -->
+        <button id="exportModalBtn" class="tool-btn" title="Export or Copy session profiles">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          EXPORT
+        </button>
+        <button id="importModalBtn" class="tool-btn" title="Import or Paste session profiles">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          IMPORT
+        </button>
       </div>
     </div>
-    <div class="domain-pill">
-      <span class="domain-text" id="activeDomainLabel">Detecting tab...</span>
-      <span class="pulse-dot" title="Active Host Hook"></span>
+
+    <!-- Active Domain Bar -->
+    <div class="domain-bar">
+      <div class="domain-info">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span class="domain-text" id="activeDomainLabel">Detecting active web host...</span>
+      </div>
+      <span class="pulse-dot" title="Active Connection Established"></span>
     </div>
   </header>
 
-  <!-- Quick Action Buttons -->
+  <!-- Quick Actions -->
   <div class="action-bar">
     <button id="saveSessionBtn" class="neo-btn btn-primary">
-      <span>💾 SAVE CURRENT</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+      <span>SAVE CURRENT</span>
     </button>
     <button id="newBlankBtn" class="neo-btn btn-secondary">
-      <span>✨ NEW BLANK</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      <span>NEW BLANK</span>
     </button>
   </div>
 
-  <!-- Search & Tag Filter -->
+  <!-- Search & Dynamic Tag Filter Bar -->
   <div class="search-filter-box">
-    <input type="text" id="searchInput" class="search-input" placeholder="Search saved sessions..." />
+    <div class="search-input-wrap">
+      <svg class="search-icon-inside" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search profiles by name or tag..." />
+    </div>
     <div class="tag-pills-row" id="tagFilterRow">
       <span class="tag-filter-pill active" data-tag="ALL">ALL</span>
-      <span class="tag-filter-pill" data-tag="Work">WORK</span>
-      <span class="tag-filter-pill" data-tag="Personal">PERSONAL</span>
-      <span class="tag-filter-pill" data-tag="Admin">ADMIN</span>
-      <span class="tag-filter-pill" data-tag="QA">QA</span>
-      <span class="tag-filter-pill" data-tag="Bot">BOT</span>
     </div>
   </div>
 
-  <!-- Sessions List -->
+  <!-- Sessions List Container -->
   <main class="sessions-container" id="sessionsListContainer">
     <div class="empty-state">
+      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
       <div class="empty-title">NO SAVED PROFILES</div>
-      <div class="empty-desc">Login to your account and click "SAVE CURRENT" to store this session profile.</div>
+      <div class="empty-desc">Login to your account and click "SAVE CURRENT" to snapshot cookies and web storage for this profile.</div>
     </div>
   </main>
 
@@ -60,21 +79,31 @@
   <div id="saveModal" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <span class="modal-title">Save Session</span>
+        <span class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg>
+          Save Session Snapshot
+        </span>
         <button class="modal-close-btn" data-modal="saveModal">&times;</button>
       </div>
       <div class="modal-body">
-        <label class="form-label">Profile Name</label>
-        <input type="text" id="saveNameInput" class="form-input" placeholder="e.g. Work Account" />
+        <div class="form-group">
+          <label class="form-label">Profile Name</label>
+          <input type="text" id="saveNameInput" class="form-input" placeholder="e.g. Work Account, Admin, Staging" />
+        </div>
 
-        <label class="form-label">Category Tag</label>
-        <div class="tag-select-row" id="saveTagRow">
-          <span class="tag-option selected" data-tag="Work">Work</span>
-          <span class="tag-option" data-tag="Personal">Personal</span>
-          <span class="tag-option" data-tag="Admin">Admin</span>
-          <span class="tag-option" data-tag="QA">QA</span>
-          <span class="tag-option" data-tag="Bot">Bot</span>
-          <span class="tag-option" data-tag="Default">Other</span>
+        <div class="form-group">
+          <label class="form-label">Custom Tag</label>
+          <input type="text" id="saveTagInput" class="form-input" placeholder="Type any tag (e.g. Work, Admin, QA, Client A)..." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quick Suggestions</label>
+          <div class="tag-suggestions-row" id="saveTagSuggestions">
+            <span class="tag-chip" data-val="Work">Work</span>
+            <span class="tag-chip" data-val="Personal">Personal</span>
+            <span class="tag-chip" data-val="Admin">Admin</span>
+            <span class="tag-chip" data-val="QA">QA</span>
+            <span class="tag-chip" data-val="Bot">Bot</span>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -88,21 +117,31 @@
   <div id="renameModal" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <span class="modal-title">Rename Session</span>
+        <span class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+          Edit Profile
+        </span>
         <button class="modal-close-btn" data-modal="renameModal">&times;</button>
       </div>
       <div class="modal-body">
-        <label class="form-label">Profile Name</label>
-        <input type="text" id="renameNameInput" class="form-input" />
+        <div class="form-group">
+          <label class="form-label">Profile Name</label>
+          <input type="text" id="renameNameInput" class="form-input" />
+        </div>
 
-        <label class="form-label">Category Tag</label>
-        <div class="tag-select-row" id="renameTagRow">
-          <span class="tag-option" data-tag="Work">Work</span>
-          <span class="tag-option" data-tag="Personal">Personal</span>
-          <span class="tag-option" data-tag="Admin">Admin</span>
-          <span class="tag-option" data-tag="QA">QA</span>
-          <span class="tag-option" data-tag="Bot">Bot</span>
-          <span class="tag-option" data-tag="Default">Other</span>
+        <div class="form-group">
+          <label class="form-label">Custom Tag</label>
+          <input type="text" id="renameTagInput" class="form-input" placeholder="Custom tag name..." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quick Suggestions</label>
+          <div class="tag-suggestions-row" id="renameTagSuggestions">
+            <span class="tag-chip" data-val="Work">Work</span>
+            <span class="tag-chip" data-val="Personal">Personal</span>
+            <span class="tag-chip" data-val="Admin">Admin</span>
+            <span class="tag-chip" data-val="QA">QA</span>
+            <span class="tag-chip" data-val="Bot">Bot</span>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -116,24 +155,94 @@
   <div id="deleteModal" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <span class="modal-title">Delete Session</span>
+        <span class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          Confirm Delete
+        </span>
         <button class="modal-close-btn" data-modal="deleteModal">&times;</button>
       </div>
       <div class="modal-body">
-        <p style="font-size: 12px; font-weight: 600;">Are you sure you want to delete profile <strong id="deleteTargetName"></strong>?</p>
-        <p style="font-size: 10px; color: var(--color-pink); font-weight: 700;">Stored cookies and web storage for this snapshot will be permanently deleted.</p>
+        <p style="font-size: 13px; font-weight: 700;">Are you sure you want to delete profile <strong id="deleteTargetName"></strong>?</p>
+        <p style="font-size: 11px; color: var(--accent-rose); font-weight: 700;">All cookies and web storage snapshots associated with this profile will be permanently wiped.</p>
       </div>
       <div class="modal-footer">
         <button class="neo-btn btn-secondary" data-modal="deleteModal">CANCEL</button>
-        <button id="confirmDeleteBtn" class="neo-btn btn-danger">CONFIRM DELETE</button>
+        <button id="confirmDeleteBtn" class="neo-btn btn-danger">DELETE</button>
       </div>
     </div>
   </div>
 
-  <!-- Hidden File Input for Import -->
-  <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+  <!-- Export Modal -->
+  <div id="exportModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <span class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Export Sessions
+        </span>
+        <button class="modal-close-btn" data-modal="exportModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-tabs">
+          <button id="exportTabCurrent" class="modal-tab-btn active">CURRENT HOST</button>
+          <button id="exportTabAll" class="modal-tab-btn">FULL BACKUP (ALL SITES)</button>
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted); font-weight: 600;">You can copy the raw JSON payload below directly to your clipboard or download it as a backup file.</p>
+        <textarea id="exportTextarea" class="form-textarea" readonly></textarea>
+      </div>
+      <div class="modal-footer">
+        <button id="copyExportBtn" class="neo-btn btn-secondary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          COPY TO CLIPBOARD
+        </button>
+        <button id="downloadExportBtn" class="neo-btn btn-primary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          DOWNLOAD JSON
+        </button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Toast Container -->
+  <!-- Import Modal -->
+  <div id="importModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <span class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Import / Restore Sessions
+        </span>
+        <button class="modal-close-btn" data-modal="importModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label class="form-label">Paste Raw JSON or Upload File</label>
+          <button id="pasteFromClipboardBtn" class="tool-btn" style="padding: 2px 7px; font-size: 10px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            PASTE FROM CLIPBOARD
+          </button>
+        </div>
+        <textarea id="importTextarea" class="form-textarea" placeholder="Paste session JSON payload here..."></textarea>
+        
+        <div id="importValidationBox" class="validation-box">
+          <span id="importValidationText">Validating...</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+          <button id="triggerUploadFileBtn" class="tool-btn" style="padding: 4px 8px; font-size: 11px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            OR SELECT FILE
+          </button>
+          <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="neo-btn btn-secondary" data-modal="importModal">CANCEL</button>
+        <button id="executeImportBtn" class="neo-btn btn-primary">RESTORE PROFILES</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="index.js"></script>
