@@ -295,5 +295,5 @@ session-swap enforces client-side data sovereignty:
 
 ## License and Attribution
 
-Copyright (c) 2026 Somay Security Research Lab.  
+Copyright (c) 2026 Somaylab.  
 Licensed under the MIT License with Mandatory Attribution Requirement.
